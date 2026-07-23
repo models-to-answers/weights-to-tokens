@@ -1,0 +1,12 @@
+## From stored files to a warm worker
+
+At startup, the serving system resolves an exact artifact, reserves device
+memory, and moves weight shards from storage through host memory into GPU HBM.
+Multi-GPU workers also establish their communication groups.
+
+The runtime then initializes kernels, memory pools, and cache structures. Warmup
+requests exercise important execution paths before the worker is marked
+healthy and admission opens.
+
+Loading happens once per worker lifecycle; the resident weights are then reused
+across many inference requests.

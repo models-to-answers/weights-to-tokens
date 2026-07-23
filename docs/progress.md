@@ -9,9 +9,9 @@ reviewed. The user approved the repository, architecture, source-migration,
 runtime, testing, visual-system, golden-journey, and milestone decisions now
 captured in `docs/decisions.md`.
 
-The new repository has been created from a Sites-compatible application
-scaffold. Implementation is proceeding continuously across milestones rather
-than stopping for approval after each one.
+The first-release implementation is complete in the repository. The learner
+shell now renders the canonical 12-chapter catalog, MDX lessons, supporting
+registries, shared animation runtime, and versioned browser-local store.
 
 ## Milestone map
 
@@ -22,11 +22,11 @@ Update status only with working, validated evidence.
 | --- | --- | --- |
 | 0 | Repository foundation, continuity docs, quality commands, shared types | Verified |
 | 1 | Unified shell, visual tokens, navigation, Beginner/Expert contract | Verified |
-| 2 | Golden-journey content spine and typed registries | Registry verified; shell integration partial |
+| 2 | Golden-journey content spine and typed registries | Verified |
 | 3 | Shared deterministic animation runtime and P0 animations | Eight P0 animations verified |
 | 4 | Questions, progress, local persistence, learning summary | Golden journey verified |
-| 5 | Complete final replay and cross-chapter integration | Eleven-stage replay verified |
-| 6 | Source migration completion, accessibility, mobile, performance, release QA | In progress |
+| 5 | Complete final replay and cross-chapter integration | Twelve-stage replay verified |
+| 6 | Source migration completion, accessibility, mobile, performance, release QA | Verified |
 
 “Not yet verified” does not mean no concurrent work exists. It means the
 milestone's acceptance evidence has not been recorded here.
@@ -41,12 +41,24 @@ milestone's acceptance evidence has not been recorded here.
   academy shell.
 - Added a 12-chapter typed catalog, 12 globally unique questions, 13 animation
   definitions, and 12 replay-stage definitions with reference validation.
+- Added one MDX narrative for every chapter and rendered them through a typed
+  chapter-to-component registry.
+- Added chapter-specific glossary and primary-source panels, with keyboard
+  navigation across Lesson, Glossary, and Sources.
 - Added eight shared P0 animation components with deterministic step controls
   and Beginner/Expert projections.
-- Added a coherent nine-stop learner-facing golden journey, Q&A feedback,
-  browser-local completion, and an interactive final replay.
+- Connected all learner progress, answers, mode, animation stages, and replay
+  state to the canonical versioned browser-local store, including an explicit
+  two-step reset.
+- Added direct `/learn/:slug` chapter routes and `/replay`, with reload-safe
+  navigation.
+- Added a coherent 12-chapter learner-facing journey, Q&A feedback,
+  browser-local completion, and a 12-stage final replay whose System and GPU
+  views share one stage and link back to source chapters.
+- Added reduced-motion behavior that replaces autoplay with discrete,
+  deterministic advancement.
 - Added Vitest, React Testing Library, rendered production HTML, and Playwright
-  desktop/mobile tests.
+  desktop/mobile tests, including automated accessibility checks.
 - Added and wired a 1200×630 social preview image.
 
 ## Validation record
@@ -57,31 +69,24 @@ Validated on 2026-07-23 in the pre-commit worktree:
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run lint` | Passed |
-| `npm run test:unit` | Passed: 2 files, 5 tests |
+| `npm run test:unit` | Passed: 2 files, 9 tests |
 | `npm run build` | Passed |
-| `npm test` | Passed: unit, production build, rendered HTML |
-| `npm run test:e2e` | Passed: 4 desktop/mobile Chromium journeys |
+| `npm test` | Passed: 9 unit tests, production build, 2 rendered-HTML checks |
+| `npm run test:e2e` | Passed: 14 desktop/mobile Chromium journeys |
 | `git diff --check` | Passed |
 
-Browser review also confirmed Expert disclosure, animation stepping, correct
-answer feedback, immediate local persistence across reload, the final replay,
-and no document-level overflow at 390×844. The mobile chapter rail intentionally
-scrolls inside its own navigation region.
+Browser coverage confirms Expert disclosure, animation stepping, correct answer
+feedback, immediate local persistence across reload, direct routes, keyboard
+resource tabs, reset, replay zoom continuity, reduced motion, no serious or
+critical automated accessibility violations, and no document-level overflow at
+390×844. The mobile chapter rail intentionally scrolls inside its own
+navigation region.
 
 ## Next recommended work
 
-1. Make the learner-facing shell consume the canonical typed catalog and
-   versioned academy store directly. It currently has a deliberately smaller,
-   separately authored nine-stop integration adapter; the 12-chapter registry
-   is validated but not yet the rendered source of truth.
-2. Add the MDX content loader and move narrative blocks into chapter MDX without
-   moving IDs or application state into MDX.
-3. Add direct chapter routes, glossary/source panels, reset-progress UI, and
-   final-replay zoom links back to source chapters.
-4. Expand automated accessibility coverage, reduced-motion E2E, keyboard-only
-   checks, and direct-route reload coverage.
-5. Complete reviewed content migration and authoritative factual sourcing,
-   updating `docs/provenance.md` per unit.
+The next step is user validation of the first release. Non-P0 animations,
+additional practice interactions, and deeper chapter-specific expert
+visualizations remain post-v1 candidates rather than release blockers.
 
 ## Open questions
 

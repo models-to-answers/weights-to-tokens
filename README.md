@@ -11,6 +11,17 @@ The default Beginner mode teaches the required causal spine in plain language.
 Expert mode is progressive disclosure over the same chapter and animation
 state. Questions, completion, and mode are saved only in browser local storage.
 
+The first release includes:
+
+- 12 MDX-backed chapters across Model Factory, Inference System, and Inside the
+  GPU;
+- eight shared deterministic P0 animations with Beginner and Expert
+  projections;
+- per-chapter questions, glossary terms, and primary source panels;
+- a 12-stage final replay with synchronized System and GPU views;
+- direct chapter URLs, keyboard navigation, reduced-motion behavior, mobile
+  support, and an explicit local-progress reset.
+
 ## Run locally
 
 Requires Node.js 22.13 or newer.
@@ -21,6 +32,8 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+Direct routes use `/learn/:slug`; the unified replay is available at `/replay`.
 
 ## Quality gates
 

@@ -1,0 +1,13 @@
+## More capacity has more than one meaning
+
+Independent replicas each hold a complete model and serve different requests.
+They increase aggregate throughput but do not help an oversized model fit on
+one device.
+
+Model-parallel approaches make several GPUs cooperate on one request. Tensor
+parallelism divides operations within layers; pipeline parallelism divides
+layers; expert parallelism routes tokens among expert partitions.
+
+Cooperation introduces communication and synchronization. The useful question
+is not simply “How many GPUs?” but whether they are replicating work or sharing
+one model execution.

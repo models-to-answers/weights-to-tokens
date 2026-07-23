@@ -1,0 +1,13 @@
+## Move fewer bytes, and move them together
+
+Registers are private to threads. Shared memory is programmer-managed storage
+shared by a block. Caches sit between SMs and device memory, while HBM provides
+large capacity and high aggregate bandwidth at longer latency.
+
+When neighboring threads request neighboring aligned addresses, the memory
+system can combine their requests into fewer transactions. Scattered access
+usually transfers more data and spends more transactions to serve the same
+useful values.
+
+Performance depends on both access pattern and reuse. Arithmetic intensity
+helps explain whether a kernel is limited primarily by compute or data movement.

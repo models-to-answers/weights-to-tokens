@@ -10,6 +10,7 @@ export type PlaybackControlsProps = {
   onReset: () => void;
   label?: string;
   className?: string;
+  reducedMotion?: boolean;
 };
 
 export function PlaybackControls({
@@ -22,6 +23,7 @@ export function PlaybackControls({
   onReset,
   label = "Animation playback",
   className,
+  reducedMotion = false,
 }: PlaybackControlsProps) {
   const atStart = currentStep === 0;
   const atEnd = currentStep === totalSteps - 1;
@@ -45,9 +47,27 @@ export function PlaybackControls({
         className="playback-controls__button playback-controls__button--primary"
         type="button"
         onClick={onPlayPause}
-        aria-label={isPlaying ? "Pause animation" : atEnd ? "Replay animation" : "Play animation"}
+        aria-label={
+          reducedMotion
+            ? atEnd
+              ? "Restart animation"
+              : "Advance animation"
+            : isPlaying
+              ? "Pause animation"
+              : atEnd
+                ? "Replay animation"
+                : "Play animation"
+        }
       >
-        {isPlaying ? "Pause" : atEnd ? "Replay" : "Play"}
+        {reducedMotion
+          ? atEnd
+            ? "Restart"
+            : "Advance"
+          : isPlaying
+            ? "Pause"
+            : atEnd
+              ? "Replay"
+              : "Play"}
       </button>
       <button
         className="playback-controls__button"

@@ -1,43 +1,74 @@
 "use client";
 
 import { StepAnimation } from "./StepAnimation";
-import type { AnimationStep, DeterministicAnimationProps, DiagramNode } from "./types";
+import type {
+  AnimationStep,
+  DeterministicAnimationProps,
+  DiagramNode,
+} from "./types";
+
+export type ReplayView = "system" | "gpu";
+
+type FinalReplayAnimationProps = DeterministicAnimationProps & {
+  view?: ReplayView;
+};
 
 const steps: AnimationStep[] = [
-  { id: "weights", title: "Start with learned weights", beginner: "Training has produced a reusable model artifact.", expert: "Checkpoint tensors encode the learned parameters; config and tokenizer define how to run them." },
-  { id: "ready", title: "Make the model ready", beginner: "Workers load and warm the model on one or more GPUs.", expert: "Ranks allocate HBM, load shards, initialize communication, warm kernels, and pass readiness checks." },
-  { id: "arrival", title: "Receive a prompt", beginner: "A request reaches the inference service.", expert: "Admission control and routing select a healthy replica with suitable capacity and cache locality." },
-  { id: "tokens", title: "Create tokens", beginner: "The prompt text becomes token IDs.", expert: "Tokenizer rules produce vocabulary IDs and request metadata before batching." },
-  { id: "batch", title: "Schedule work", beginner: "The request joins a GPU batch.", expert: "The scheduler budgets tokens, KV blocks, queue delay, and active sequence slots." },
-  { id: "prefill", title: "Run prefill", beginner: "The GPU processes the full prompt.", expert: "A sequence of kernels computes layer activations and initial attention state." },
-  { id: "kernel", title: "Execute kernels", beginner: "Blocks and warps carry out each GPU operation.", expert: "Runtime launches become grids; block residency and warp eligibility drive instruction issue on SMs." },
-  { id: "cache", title: "Store attention memory", beginner: "The KV cache remembers prior token context.", expert: "Paged per-layer KV blocks retain keys and values while the sequence remains active." },
-  { id: "decode", title: "Decode repeatedly", beginner: "The model selects one new token, then repeats.", expert: "Each iteration reads weights and KV state, executes decode kernels, samples, appends KV, and reschedules." },
-  { id: "multi", title: "Coordinate GPUs if needed", beginner: "A sharded model exchanges intermediate results across GPUs.", expert: "Collectives synchronize tensor-parallel ranks; pipeline or expert-parallel layouts add their own communication paths." },
-  { id: "stream", title: "Stream the answer", beginner: "Tokens become text and appear in the response.", expert: "Detokenization, stop conditions, and incremental transport turn generated IDs into user-visible output." },
+  { id: "weights", title: "Weights are learned", beginner: "Training produces reusable model weights.", expert: "Loss gradients and optimizer updates have produced a versioned checkpoint." },
+  { id: "artifact", title: "The artifact is stored", beginner: "Weights, configuration, and tokenizer assets are packaged together.", expert: "Immutable shards and a manifest preserve tensor layout, precision, and compatibility metadata." },
+  { id: "ready", title: "The model becomes ready", beginner: "Workers load and warm the model on one or more GPUs.", expert: "Ranks allocate HBM, load shards, initialize communication, warm kernels, and pass readiness checks." },
+  { id: "arrival", title: "A prompt is admitted", beginner: "The serving system accepts and schedules the request.", expert: "Routing and admission control select a healthy worker with suitable capacity and cache locality." },
+  { id: "tokens", title: "Text becomes token IDs", beginner: "The tokenizer converts the prompt into model input IDs.", expert: "Tokenizer rules add model-specific IDs, boundaries, and request metadata." },
+  { id: "prefill", title: "Prefill processes the prompt", beginner: "The GPU reads the prompt positions and creates attention state.", expert: "Layer kernels compute activations and write initial keys and values into allocated KV blocks." },
+  { id: "gpu", title: "The view enters the GPU", beginner: "Model operations are dispatched to GPU compute and memory.", expert: "Command streams order kernels and dependencies while tensors reside across HBM and cache." },
+  { id: "kernel", title: "A kernel is launched", beginner: "A grid of thread blocks is submitted for execution.", expert: "Launch dimensions and resource usage determine which blocks can become resident on SMs." },
+  { id: "warps", title: "Warps execute instructions", beginner: "Schedulers select ready groups of threads.", expert: "Scoreboards, operands, dependencies, and functional-unit availability determine warp eligibility." },
+  { id: "memory", title: "Memory supplies operands", beginner: "The memory hierarchy feeds data to the executing threads.", expert: "Coalescing, cache hits, shared-memory use, and HBM bandwidth shape the service time." },
+  { id: "decode", title: "Decode predicts a token", beginner: "The model selects one next token and updates its cache.", expert: "Decode kernels read weights and KV state, produce logits, sample, append KV, and reschedule." },
+  { id: "stream", title: "The token is streamed", beginner: "The token becomes text and appears in the response.", expert: "Detokenization and stop rules convert generated IDs into incremental response events." },
 ];
 
-const nodes: DiagramNode[] = [
-  { id: "weights", label: "Weights", detail: "learned checkpoint" },
-  { id: "ready", label: "Ready model", detail: "loaded + warmed" },
-  { id: "arrival", label: "Request", detail: "route + admit" },
-  { id: "tokens", label: "Tokens", detail: "text → IDs" },
-  { id: "batch", label: "Batch", detail: "scheduler decision" },
-  { id: "prefill", label: "Prefill", detail: "prompt-wide compute" },
-  { id: "kernel", label: "GPU execution", detail: "kernel → block → warp" },
-  { id: "cache", label: "KV cache", detail: "attention memory" },
+const systemNodes: DiagramNode[] = [
+  { id: "weights", label: "Learned weights", detail: "training output" },
+  { id: "artifact", label: "Model artifact", detail: "weights + config + tokenizer" },
+  { id: "ready", label: "Ready worker", detail: "loaded + warmed" },
+  { id: "arrival", label: "Admitted request", detail: "route + capacity" },
+  { id: "tokens", label: "Input tokens", detail: "text → IDs" },
+  { id: "prefill", label: "Prefill", detail: "context processing" },
+  { id: "gpu", label: "GPU runtime", detail: "ordered operations" },
+  { id: "kernel", label: "Kernel launch", detail: "grid + blocks" },
+  { id: "warps", label: "Execution", detail: "warps issue" },
+  { id: "memory", label: "Memory service", detail: "operands move" },
   { id: "decode", label: "Decode loop", detail: "next-token iteration" },
-  { id: "multi", label: "GPU coordination", detail: "when model is sharded" },
-  { id: "stream", label: "Answer", detail: "IDs → streamed text" },
+  { id: "stream", label: "Streamed text", detail: "IDs → response" },
 ];
 
-export function FinalReplayAnimation(props: DeterministicAnimationProps) {
+const gpuNodes: DiagramNode[] = [
+  { id: "weights", label: "Checkpoint tensors", detail: "learned values" },
+  { id: "artifact", label: "Weight shards", detail: "typed + shaped" },
+  { id: "ready", label: "HBM placement", detail: "weights resident" },
+  { id: "arrival", label: "Work queue", detail: "request admitted" },
+  { id: "tokens", label: "Input buffers", detail: "token IDs" },
+  { id: "prefill", label: "Prefill kernels", detail: "KV blocks created" },
+  { id: "gpu", label: "Command stream", detail: "dependencies ordered" },
+  { id: "kernel", label: "Grid → blocks", detail: "assigned to SMs" },
+  { id: "warps", label: "Warp schedulers", detail: "ready instructions" },
+  { id: "memory", label: "Cache → HBM", detail: "coalesced traffic" },
+  { id: "decode", label: "Decode kernels", detail: "logits + KV append" },
+  { id: "stream", label: "Output buffer", detail: "token returned" },
+];
+
+export function FinalReplayAnimation({
+  view = "system",
+  ...props
+}: FinalReplayAnimationProps) {
+  const nodes = view === "system" ? systemNodes : gpuNodes;
   return (
     <StepAnimation
       {...props}
-      animationId="final-replay"
-      title="One prompt, end to end"
-      summary="Replay the entire academy as one continuous system timeline."
+      animationId={`final-replay-${view}`}
+      title={view === "system" ? "One prompt: system view" : "One prompt: GPU view"}
+      summary="The timeline stays fixed while the zoom level changes."
       steps={steps}
       nodes={nodes}
       activeNodeIds={(step) => nodes.slice(0, step + 1).map((node) => node.id)}

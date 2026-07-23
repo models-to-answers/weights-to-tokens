@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   academyCatalog,
   animationDefinitions,
+  glossaryForChapter,
+  lessonComponents,
   replayStageDefinitions,
+  sourcesForChapter,
   validateAcademy,
 } from "@/src/content";
 import { layersForMode } from "@/src/domain";
@@ -32,6 +35,14 @@ describe("academy catalog", () => {
       expect(expertLayers.length).toBeGreaterThanOrEqual(1);
     }
   });
+
+  it("gives every release chapter MDX content, glossary terms, and primary sources", () => {
+    for (const chapter of academyCatalog.chapters) {
+      expect(lessonComponents[chapter.id]).toBeTypeOf("function");
+      expect(glossaryForChapter(chapter.id).length).toBeGreaterThan(0);
+      expect(sourcesForChapter(chapter.id).length).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe("browser-local learning state", () => {
@@ -56,5 +67,15 @@ describe("browser-local learning state", () => {
     });
     expect(parseAcademyState(serializeAcademyState(expert))).toEqual(expert);
     expect(parseAcademyState("{not-json")).toEqual(initialAcademyState);
+  });
+
+  it("resets every durable progress field", () => {
+    const chapterId = academyCatalog.chapters[0].id;
+    const completed = academyReducer(initialAcademyState, {
+      type: "COMPLETE_BEGINNER_CHAPTER",
+      chapterId,
+    });
+    const reset = academyReducer(completed, { type: "RESET_PROGRESS" });
+    expect(reset).toEqual(initialAcademyState);
   });
 });

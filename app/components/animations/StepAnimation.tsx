@@ -72,6 +72,7 @@ export function StepAnimation({
       <div
         className="step-animation__diagram"
         role="img"
+        tabIndex={0}
         aria-label={`${title}. Current stage: ${activeStep.title}. ${activeStep.beginner}`}
       >
         <ol className="step-animation__nodes">
@@ -134,6 +135,7 @@ export function StepAnimation({
         onPlayPause={playback.togglePlayback}
         onReset={playback.reset}
         label={`${title} playback`}
+        reducedMotion={playback.reducedMotion}
       />
     </section>
   );

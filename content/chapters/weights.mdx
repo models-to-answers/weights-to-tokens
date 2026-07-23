@@ -1,0 +1,13 @@
+## Architecture, weights, and tokens
+
+The architecture describes the operations and connections in the model. The
+weights are the learned numeric settings used by those operations. A tokenizer
+is the translation layer between human text and the token IDs the model reads
+and predicts.
+
+A checkpoint stores weight tensors and enough metadata to reconstruct them. It
+is an artifact, not a running service: serving software still has to load it,
+allocate memory, and execute compatible operations.
+
+During inference, the trained weights remain fixed. The runtime reads them
+repeatedly while producing each next-token prediction.

@@ -1,0 +1,12 @@
+## From a model operation to thread work
+
+Framework operations eventually dispatch GPU kernels. A launch specifies a
+grid made of thread blocks plus arguments, stream ordering, and block
+dimensions.
+
+Hardware assigns complete blocks to SMs when registers, shared memory, thread
+slots, and block slots are available. Threads in each block are partitioned
+into warps for instruction issue.
+
+The CPU launch can be asynchronous. A later dependency or synchronization
+boundary determines when another operation must wait for its results.

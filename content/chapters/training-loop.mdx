@@ -1,0 +1,13 @@
+## One training step
+
+A batch of examples enters the model in the forward pass. The model produces a
+prediction, and a loss function measures how far that prediction is from the
+desired result.
+
+Backpropagation follows the recorded computation in reverse to calculate how
+each trainable weight contributed to the loss. An optimizer then applies a
+small update. Repeating this process across many batches creates the learned
+weights used later by inference.
+
+Training therefore stores activations, gradients, and optimizer state that
+ordinary inference does not need.

@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 type PlaybackOptions = {
   step?: number;
@@ -26,6 +32,19 @@ export function useDeterministicPlayback({
     clamp(defaultStep, lastStep),
   );
   const [isPlaying, setIsPlaying] = useState(false);
+  const reducedMotion = useSyncExternalStore(
+    (notify) => {
+      if (typeof window.matchMedia !== "function") return () => undefined;
+      const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+      query.addEventListener("change", notify);
+      return () => query.removeEventListener("change", notify);
+    },
+    () =>
+      typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        : false,
+    () => false,
+  );
   const currentStep = clamp(isControlled ? step : internalStep, lastStep);
 
   const setStep = useCallback(
@@ -40,7 +59,7 @@ export function useDeterministicPlayback({
   );
 
   useEffect(() => {
-    if (!isPlaying || currentStep >= lastStep) return;
+    if (!isPlaying || reducedMotion || currentStep >= lastStep) return;
 
     const timer = window.setTimeout(
       () => {
@@ -53,7 +72,14 @@ export function useDeterministicPlayback({
       autoPlayIntervalMs,
     );
     return () => window.clearTimeout(timer);
-  }, [autoPlayIntervalMs, currentStep, isPlaying, lastStep, setStep]);
+  }, [
+    autoPlayIntervalMs,
+    currentStep,
+    isPlaying,
+    lastStep,
+    reducedMotion,
+    setStep,
+  ]);
 
   const controls = useMemo(
     () => ({
@@ -72,6 +98,11 @@ export function useDeterministicPlayback({
         setStep(0);
       },
       togglePlayback: () => {
+        if (reducedMotion) {
+          setIsPlaying(false);
+          setStep(currentStep >= lastStep ? 0 : currentStep + 1);
+          return;
+        }
         if (currentStep >= lastStep) {
           setStep(0);
           setIsPlaying(true);
@@ -80,8 +111,8 @@ export function useDeterministicPlayback({
         setIsPlaying((playing) => !playing);
       },
     }),
-    [currentStep, isPlaying, lastStep, setStep],
+    [currentStep, isPlaying, lastStep, reducedMotion, setStep],
   );
 
-  return controls;
+  return { ...controls, reducedMotion };
 }

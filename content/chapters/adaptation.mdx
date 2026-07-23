@@ -1,0 +1,13 @@
+## Change context or change weights?
+
+Prompting changes the instructions supplied with a request. Retrieval adds
+external information at request time. Neither method changes the base model’s
+weights, which makes them relatively quick to update and reverse.
+
+Fine-tuning changes some or all weights to alter behavior. Parameter-efficient
+methods such as LoRA train a small set of adapter parameters while keeping the
+base weights frozen. Continued pretraining is appropriate when the model must
+learn broad domain patterns rather than follow a narrower task format.
+
+Choose the least expensive intervention that changes the behavior you actually
+need, and define an evaluation before modifying weights.

@@ -1,4 +1,7 @@
-export { FinalReplayAnimation } from "./FinalReplayAnimation";
+export {
+  FinalReplayAnimation,
+  type ReplayView,
+} from "./FinalReplayAnimation";
 export { GpuAnatomyAnimation } from "./GpuAnatomyAnimation";
 export { JourneyOverviewAnimation } from "./JourneyOverviewAnimation";
 export { KernelLaunchAnimation } from "./KernelLaunchAnimation";

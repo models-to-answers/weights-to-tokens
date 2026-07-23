@@ -1,0 +1,13 @@
+## The short runway before GPU execution
+
+A request is authenticated, routed to an appropriate model deployment, checked
+against capacity, and admitted to a queue. The tokenizer converts its text into
+token IDs before GPU work begins.
+
+The scheduler may briefly combine compatible work into a batch. Larger batches
+can improve throughput, but waiting too long increases user-visible latency.
+Continuous batching revisits this decision as active sequences finish and new
+requests arrive.
+
+This chapter intentionally stops at the inference boundary; it is not a
+packet-networking course.

@@ -1,0 +1,12 @@
+## Ready work hides waiting
+
+A warp contains 32 CUDA threads. At an instruction-issue opportunity, a warp
+scheduler chooses an eligible warp whose operands and execution resources are
+ready.
+
+If a warp is stalled on memory or a dependency, another resident warp can
+issue. This rapid interleaving is how GPU concurrency hides latency without
+making the original memory operation itself faster.
+
+High theoretical occupancy only creates the opportunity to hide latency.
+Dependencies, divergence, and instruction mix determine achieved utilization.

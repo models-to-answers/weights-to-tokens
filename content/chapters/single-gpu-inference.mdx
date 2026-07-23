@@ -1,0 +1,12 @@
+## Read the prompt, then extend it
+
+Tokenization produces input IDs. During prefill, the model processes the prompt
+positions in parallel and creates attention keys and values for every layer.
+Those reusable values form the KV cache.
+
+Decode is iterative. Each active sequence produces one next-token prediction,
+the sampling policy chooses a token, its new key and value are appended, and
+the sequence returns to the scheduler unless a stopping condition has fired.
+
+Time to first token includes queueing and prefill. Inter-token latency describes
+the cadence after generation starts. They can have different bottlenecks.

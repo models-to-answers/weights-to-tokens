@@ -1,0 +1,11 @@
+## A hierarchy built for throughput
+
+High-bandwidth memory holds weights, KV-cache blocks, and working tensors. Cache
+and memory controllers feed many streaming multiprocessors, usually called SMs.
+
+An SM contains warp schedulers, execution pipelines, registers, and shared
+memory. Many warps can remain resident so the scheduler has other eligible work
+when one warp waits on a dependency or memory.
+
+Exact unit counts vary by GPU generation. The durable mental model is the
+device-to-SM-to-warp-to-execution-unit hierarchy.

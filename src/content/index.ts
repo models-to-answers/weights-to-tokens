@@ -18,3 +18,12 @@ export {
   validateAcademy,
   type CatalogValidationIssue,
 } from "./validation";
+export { lessonComponents } from "./lessons";
+export {
+  glossaryForChapter,
+  glossaryTerms,
+  sourceReferences,
+  sourcesForChapter,
+  type GlossaryTerm,
+  type SourceReference,
+} from "./supporting";

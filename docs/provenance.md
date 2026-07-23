@@ -87,6 +87,11 @@ prose, or artwork was copied.
 | 2026-07-23 | AI Model Academy `e95b1afe`, curriculum structure and model concepts | `src/content/catalog.ts`, `app/components/AcademyApp.tsx` | Inspired/reimplemented | Concepts only; no source code, prose, or artwork copied | Reauthored as one Beginner-first spine with stable IDs; catalog validation and golden-journey E2E pass |
 | 2026-07-23 | Packet Academy `a86e9aa5`, model readiness and multi-GPU themes | `src/content/catalog.ts`, `app/components/animations/ModelReadinessAnimation.tsx`, `app/components/animations/OneVsMultiGpuAnimation.tsx` | Inspired/reimplemented | Concepts only; repository had no root license at capture | Removed packet/VXLAN curriculum; reauthored request arrival as a short pre-GPU summary; animation/unit/E2E checks pass |
 | 2026-07-23 | GPU Tutorial `66f6f9fb`, anatomy and kernel-launch themes | `app/components/animations/GpuAnatomyAnimation.tsx`, `app/components/animations/KernelLaunchAnimation.tsx` | Inspired/reimplemented | Concepts only; repository had no root license at capture | Reauthored as deterministic accessible steps with Beginner and Expert projections; animation/unit/E2E checks pass |
+| 2026-07-23 | Approved unified academy blueprint and the three pinned source baselines above | `content/chapters/*.mdx`, `src/content/supporting.ts` | Reauthored and independently sourced | Original project work plus links to public primary documentation | Twelve chapter narratives, glossary mappings, and source mappings validated for complete catalog coverage; desktop/mobile, accessibility, and rendered-route checks pass |
+
+The typed source registry links technical claims to primary documentation from
+PyTorch, Hugging Face, and NVIDIA. These links are references only; their prose
+and artwork are not copied into the academy.
 
 ## Ledger procedure
 
