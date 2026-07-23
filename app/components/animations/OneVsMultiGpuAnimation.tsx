@@ -23,7 +23,7 @@ export function OneVsMultiGpuAnimation(props: DeterministicAnimationProps) {
   return (
     <StepAnimation
       {...props}
-      animationId="one-vs-multi-gpu"
+      animationId="animation.inference-system.multi-gpu"
       title="One GPU or many?"
       summary="Extra GPUs can add replicas or cooperate on one model—and those are different choices."
       steps={steps}

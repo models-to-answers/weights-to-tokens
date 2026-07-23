@@ -11,6 +11,8 @@ export type ChapterId = `chapter.${PartId}.${string}`;
 export type QuestionId = `question.${PartId}.${string}`;
 export type AnimationId = `animation.${PartId | "replay"}.${string}`;
 export type ReplayStageId = `replay.${string}`;
+export type GlossaryId = `glossary.${string}`;
+export type SourceId = `source.${string}`;
 
 export type ContentBlock =
   | {
@@ -47,8 +49,11 @@ export interface ChapterDefinition {
    * replace or contradict the core path.
    */
   expert?: LearningLayer;
+  content: () => Promise<unknown>;
   animationIds: readonly AnimationId[];
   questionIds: readonly QuestionId[];
+  glossaryIds: readonly GlossaryId[];
+  sourceIds: readonly SourceId[];
   replayStageIds: readonly ReplayStageId[];
   prerequisites: readonly ChapterId[];
 }
@@ -91,4 +96,3 @@ export function layersForMode(
   }
   return [chapter.beginner];
 }
-

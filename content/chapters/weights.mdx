@@ -11,3 +11,26 @@ allocate memory, and execute compatible operations.
 
 During inference, the trained weights remain fixed. The runtime reads them
 repeatedly while producing each next-token prediction.
+
+### What the model actually does
+
+An autoregressive model repeatedly computes a distribution over its vocabulary,
+selects a token, appends it, and runs again. Capability comes from learning
+enough structure to make that apparently simple prediction well.
+
+<InteractionSlot animationId="animation.model-factory.token-predictor" />
+
+### Where the billions come from
+
+Depth grows parameter count roughly linearly. Width appears inside square
+projection matrices and grows it much faster. Vocabulary embeddings matter
+most for smaller models, while feed-forward blocks dominate many dense large
+models.
+
+<InteractionSlot animationId="animation.model-factory.parameter-builder" />
+
+### Keep the whole journey visible
+
+<InteractionSlot animationId="animation.model-factory.weights-map" />
+
+<ChapterCheck />

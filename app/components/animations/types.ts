@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { SerializableScalar } from "@/src/domain";
 
 export type LearningMode = "beginner" | "expert";
 
@@ -14,6 +15,8 @@ export type DeterministicAnimationProps = {
   step?: number;
   defaultStep?: number;
   onStepChange?: (step: number) => void;
+  inputs?: Readonly<Record<string, SerializableScalar>>;
+  onInputChange?: (key: string, value: SerializableScalar) => void;
   autoPlayIntervalMs?: number;
   className?: string;
 };

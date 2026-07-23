@@ -11,3 +11,37 @@ useful values.
 
 Performance depends on both access pattern and reuse. Arithmetic intensity
 helps explain whether a kernel is limited primarily by compute or data movement.
+
+<InteractionSlot animationId="animation.inside-gpu.coalesced-memory" />
+
+## Choose an optimization from the bottleneck
+
+The roofline model compares the work performed with bytes moved. A kernel below
+the sloped bandwidth roof needs better locality, reuse, coalescing, or fusion.
+A kernel near the flat compute roof needs more effective math pipelines,
+instruction efficiency, or algorithmic change.
+
+<InteractionSlot animationId="animation.inside-gpu.roofline" />
+
+## A practical reduction checklist
+
+1. Profile first: identify the hottest kernel and its dominant stall reason.
+2. Remove unnecessary host-device transfers and intermediate tensors.
+3. Make neighboring lanes access neighboring aligned addresses.
+4. Reuse values in registers, shared memory, or cache.
+5. Fuse operations when it avoids materializing large intermediates.
+6. Check occupancy resources without treating occupancy as the final goal.
+7. Re-measure correctness and end-to-end latency after every change.
+
+## CPU-to-GPU translation table
+
+| CPU-oriented term | Closest GPU mental model | Important difference |
+| --- | --- | --- |
+| CPU socket | GPU device | The GPU is a throughput coprocessor with its own memory |
+| CPU core | Streaming multiprocessor | An SM hosts many warps and several execution pipelines |
+| Software thread | CUDA thread | Threads issue in 32-thread warps |
+| SIMD vector | Warp lanes | Branch masks can make only some lanes active |
+| L1/L2 cache | Shared/L1 and L2 | Shared memory is explicitly managed by a block |
+| System RAM | HBM | HBM has high bandwidth but is separate from host memory |
+
+<ChapterCheck />

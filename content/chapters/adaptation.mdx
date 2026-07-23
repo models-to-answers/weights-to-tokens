@@ -11,3 +11,20 @@ learn broad domain patterns rather than follow a narrower task format.
 
 Choose the least expensive intervention that changes the behavior you actually
 need, and define an evaluation before modifying weights.
+
+### Why low-rank adaptation works
+
+Full fine-tuning updates every parameter. LoRA freezes the pretrained base and
+learns two thin matrices whose product forms an update. The update can later be
+merged into the base, so it need not add inference latency.
+
+<InteractionSlot animationId="animation.model-factory.adaptation-lab" />
+
+### Compare the intervention points
+
+LoRA, QLoRA, adapters, prefix tuning, and head-only training touch different
+parts of the computation and leave different costs behind.
+
+<InteractionSlot animationId="animation.model-factory.fine-tune-methods" />
+
+<ChapterCheck />

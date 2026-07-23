@@ -25,7 +25,7 @@ export function ModelReadinessAnimation(props: DeterministicAnimationProps) {
   return (
     <StepAnimation
       {...props}
-      animationId="model-readiness"
+      animationId="animation.inference-system.model-loading"
       title="How a model becomes ready"
       summary="Loading is a staged system operation, not a single file copy."
       steps={steps}

@@ -10,3 +10,16 @@ making the original memory operation itself faster.
 
 High theoretical occupancy only creates the opportunity to hide latency.
 Dependencies, divergence, and instruction mix determine achieved utilization.
+
+## One instruction stream, different lane decisions
+
+CUDA threads hold individual state, but the threads in a warp issue together.
+When a branch divides the warp, hardware masks the lanes for one path, then the
+other, before reconverging. Divergence is expensive when both paths contain
+substantial work.
+
+<InteractionSlot animationId="animation.inside-gpu.divergence" />
+
+<InteractionSlot animationId="animation.inside-gpu.warp-scheduler" />
+
+<ChapterCheck />

@@ -154,3 +154,26 @@ Reuse only material whose license or owner permission is established and
 compatible with this project. Preserve required notices and provenance. A
 repository that lacks an explicit license is not treated as MIT merely because
 another related repository uses MIT; use owner permission or reimplement.
+
+### D-015 — Preserve substantive source coverage and interaction depth
+
+- **Status:** Approved
+- **Date:** 2026-07-23
+- **Supersedes:** The narrow interpretation of D-006
+
+The unified academy must preserve the substantive curriculum and rich
+interactive teaching value of AI Model Academy, Packet Academy, and GPU
+Tutorial. D-006 still requires a new repository and one unified architecture;
+it does not authorize reducing source lessons to a small concept sample or
+replacing deep interactives with generic step cards.
+
+Packet-specific networking, generic packet journeys, and VXLAN remain excluded
+under D-004. Relevant compute, model-loading, storage-locality, inference,
+multi-GPU communication, and training-system concepts from Packet Academy are
+retained after removing protocol-specific presentation.
+
+Every retained source lesson and interaction needs an explicit destination or
+an explicit, approved exclusion in `docs/migration-matrix.md`. Existing
+animations should be adapted at comparable or greater teaching depth. New
+animations must be thorough, polished, deterministic, accessible, and support
+Beginner/Expert progressive disclosure.

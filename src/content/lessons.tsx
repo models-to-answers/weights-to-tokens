@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import type { MDXComponents } from "mdx/types";
 import type { ChapterId } from "../domain";
 import WeightsLesson from "../../content/chapters/weights.mdx";
 import TrainingLesson from "../../content/chapters/training-loop.mdx";
@@ -13,7 +14,11 @@ import KernelLesson from "../../content/chapters/kernel-launch.mdx";
 import SchedulerLesson from "../../content/chapters/warp-scheduler.mdx";
 import MemoryLesson from "../../content/chapters/memory-hierarchy.mdx";
 
-export const lessonComponents: Readonly<Record<ChapterId, ComponentType>> = {
+export type LessonComponent = ComponentType<{
+  components?: MDXComponents;
+}>;
+
+export const lessonComponents: Readonly<Record<ChapterId, LessonComponent>> = {
   "chapter.model-factory.weights": WeightsLesson,
   "chapter.model-factory.training": TrainingLesson,
   "chapter.model-factory.adaptation": AdaptationLesson,

@@ -11,3 +11,14 @@ silently becoming a ready worker.
 
 The artifact is the handoff between the model factory and the inference
 system.
+
+### Open and closed are artifact-and-rights choices
+
+An API may expose only a service. An open-weights release supplies parameter
+files but usually withholds the training data and recipe. Owning weights also
+means owning quantization, batching, KV-cache management, scaling, evaluation,
+and version lifecycle.
+
+<InteractionSlot animationId="animation.model-factory.artifact-packaging" />
+
+<ChapterCheck />

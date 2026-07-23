@@ -27,7 +27,7 @@ export function KernelLaunchAnimation(props: DeterministicAnimationProps) {
   return (
     <StepAnimation
       {...props}
-      animationId="kernel-launch"
+      animationId="animation.inside-gpu.kernel-launch"
       title="One kernel launch, end to end"
       summary="Trace one tensor operation from model code to executed GPU instructions."
       steps={steps}

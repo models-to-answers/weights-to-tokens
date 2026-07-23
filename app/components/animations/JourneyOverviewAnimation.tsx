@@ -27,7 +27,7 @@ export function JourneyOverviewAnimation(props: DeterministicAnimationProps) {
   return (
     <StepAnimation
       {...props}
-      animationId="journey-overview"
+      animationId="animation.model-factory.weights-map"
       title="From weights to tokens"
       summary="Follow one model from learning through a live inference response."
       steps={steps}

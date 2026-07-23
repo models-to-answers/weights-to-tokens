@@ -10,3 +10,16 @@ healthy and admission opens.
 
 Loading happens once per worker lifecycle; the resident weights are then reused
 across many inference requests.
+
+<InteractionSlot animationId="animation.inference-system.model-locality" />
+
+## Readiness is a sequence, not a process state
+
+After bytes arrive in HBM, the worker may still need to initialize memory pools,
+compile or select kernels, establish multi-rank communicators, allocate cache
+structures, and exercise representative shapes. Admission should open only
+after that usable execution path succeeds.
+
+<InteractionSlot animationId="animation.inference-system.model-loading" />
+
+<ChapterCheck />

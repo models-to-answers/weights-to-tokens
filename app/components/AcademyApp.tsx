@@ -19,21 +19,40 @@ import {
 } from "@/src/content";
 import {
   initialAnimationState,
+  reduceAnimation,
   type AnimationId,
   type ChapterDefinition,
   type ChapterId,
+  type DeterministicAnimationState,
   type LearningMode,
   type MultipleChoiceQuestion,
+  type SerializableScalar,
 } from "@/src/domain";
 import { useAcademyStore } from "@/src/state";
+import { loadAcademyState } from "@/src/state/academy-store";
 import {
-  GpuAnatomyAnimation,
-  JourneyOverviewAnimation,
-  KernelLaunchAnimation,
-  ModelReadinessAnimation,
-  OneVsMultiGpuAnimation,
-  PrefillKvDecodeAnimation,
-  TrainingLoopAnimation,
+  CoalescingLab,
+  ComputePlatformLab,
+  DivergenceSimulator,
+  GpuCrankRoomLab,
+  GridLaunchExplorer,
+  FineTuneMethodsLab,
+  InferenceRuntimeLab,
+  JourneyMapLab,
+  LoRALab,
+  ModelLocalityLab,
+  ReadinessSequenceLab,
+  MultiGpuCollectiveLab,
+  ParameterBuilderLab,
+  PipelineStagesLab,
+  PreferenceTrainerLab,
+  RequestArrivalLab,
+  RooflineLab,
+  SchedulerTraceLab,
+  TokenPredictorLab,
+  TrainingRunLab,
+  ThroughputSiliconLab,
+  WeightsSpectrumLab,
 } from "./animations";
 import type { DeterministicAnimationProps } from "./animations/types";
 import { FinalReplayExperience } from "./FinalReplayExperience";
@@ -45,21 +64,31 @@ type AcademyAppProps = {
   initialReplay?: boolean;
 };
 
-const animationComponents: Partial<
+export const animationComponents: Partial<
   Record<AnimationId, ComponentType<DeterministicAnimationProps>>
 > = {
-  "animation.model-factory.weights-map": JourneyOverviewAnimation,
-  "animation.model-factory.training-loop": TrainingLoopAnimation,
-  "animation.model-factory.adaptation-lab": TrainingLoopAnimation,
-  "animation.model-factory.artifact-packaging": ModelReadinessAnimation,
-  "animation.inference-system.request-arrival": JourneyOverviewAnimation,
-  "animation.inference-system.model-loading": ModelReadinessAnimation,
-  "animation.inference-system.prefill-decode": PrefillKvDecodeAnimation,
-  "animation.inference-system.multi-gpu": OneVsMultiGpuAnimation,
-  "animation.inside-gpu.zoom-anatomy": GpuAnatomyAnimation,
-  "animation.inside-gpu.kernel-launch": KernelLaunchAnimation,
-  "animation.inside-gpu.warp-scheduler": KernelLaunchAnimation,
-  "animation.inside-gpu.coalesced-memory": GpuAnatomyAnimation,
+  "animation.model-factory.weights-map": JourneyMapLab,
+  "animation.model-factory.token-predictor": TokenPredictorLab,
+  "animation.model-factory.parameter-builder": ParameterBuilderLab,
+  "animation.model-factory.pipeline-stages": PipelineStagesLab,
+  "animation.model-factory.training-loop": TrainingRunLab,
+  "animation.model-factory.preference-trainer": PreferenceTrainerLab,
+  "animation.model-factory.adaptation-lab": LoRALab,
+  "animation.model-factory.fine-tune-methods": FineTuneMethodsLab,
+  "animation.model-factory.artifact-packaging": WeightsSpectrumLab,
+  "animation.inference-system.request-arrival": RequestArrivalLab,
+  "animation.inference-system.compute-platform": ComputePlatformLab,
+  "animation.inference-system.model-locality": ModelLocalityLab,
+  "animation.inference-system.model-loading": ReadinessSequenceLab,
+  "animation.inference-system.prefill-decode": InferenceRuntimeLab,
+  "animation.inference-system.multi-gpu": MultiGpuCollectiveLab,
+  "animation.inside-gpu.throughput-silicon": ThroughputSiliconLab,
+  "animation.inside-gpu.zoom-anatomy": GpuCrankRoomLab,
+  "animation.inside-gpu.kernel-launch": GridLaunchExplorer,
+  "animation.inside-gpu.divergence": DivergenceSimulator,
+  "animation.inside-gpu.warp-scheduler": SchedulerTraceLab,
+  "animation.inside-gpu.coalesced-memory": CoalescingLab,
+  "animation.inside-gpu.roofline": RooflineLab,
 };
 
 function useHydrated(): boolean {
@@ -148,6 +177,13 @@ export function AcademyApp(props: AcademyAppProps) {
   );
 
   useEffect(() => {
+    dispatch({
+      type: "HYDRATE",
+      state: loadAcademyState(window.localStorage),
+    });
+  }, [dispatch]);
+
+  useEffect(() => {
     const onPopState = () => {
       setActiveView(viewFromPathname(window.location.pathname));
       setDetailTab("lesson");
@@ -155,6 +191,21 @@ export function AcademyApp(props: AcademyAppProps) {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+
+  useEffect(() => {
+    if (
+      academyState.mode === "expert" &&
+      activeChapter &&
+      !academyState.exploredExpertChapterIds.includes(activeChapter.id)
+    ) {
+      dispatch({ type: "MARK_EXPERT_EXPLORED", chapterId: activeChapter.id });
+    }
+  }, [
+    academyState.exploredExpertChapterIds,
+    academyState.mode,
+    activeChapter,
+    dispatch,
+  ]);
 
   function navigate(view: ChapterId | "replay", replace = false) {
     const path =
@@ -323,21 +374,36 @@ export function AcademyApp(props: AcademyAppProps) {
             onDetailTabChange={setDetailTab}
             onAnimationStep={(animationId, stageIndex) => {
               const definition = animationRegistry[animationId];
+              const current =
+                academyState.animationStates[animationId] ??
+                initialAnimationState(definition, academyState.mode);
+              const inCurrentMode = reduceAnimation(definition, current, {
+                type: "SET_MODE",
+                mode: academyState.mode,
+              });
               dispatch({
                 type: "SAVE_ANIMATION_STATE",
-                animation: {
-                  ...initialAnimationState(definition, academyState.mode),
+                animation: reduceAnimation(definition, inCurrentMode, {
+                  type: "SEEK",
                   stageIndex,
-                  status: "paused",
-                },
+                }),
               });
             }}
-            savedAnimationSteps={Object.fromEntries(
-              Object.entries(academyState.animationStates).map(([id, state]) => [
-                id,
-                state?.stageIndex ?? 0,
-              ]),
-            )}
+            onAnimationInput={(animationId, key, value) => {
+              const definition = animationRegistry[animationId];
+              const current =
+                academyState.animationStates[animationId] ??
+                initialAnimationState(definition, academyState.mode);
+              dispatch({
+                type: "SAVE_ANIMATION_STATE",
+                animation: reduceAnimation(definition, current, {
+                  type: "SET_INPUT",
+                  key,
+                  value,
+                }),
+              });
+            }}
+            savedAnimations={academyState.animationStates}
             onAnswer={(selectedChoiceId) => {
               const question = questions.find(
                 (candidate) => candidate.id === activeChapter.questionIds[0],
@@ -373,16 +439,19 @@ export function AcademyApp(props: AcademyAppProps) {
             onStepChange={(stageIndex) => {
               const definition =
                 animationRegistry["animation.replay.one-prompt"];
+              const current =
+                academyState.animationStates[definition.id] ??
+                initialAnimationState(definition, academyState.mode);
+              const inCurrentMode = reduceAnimation(definition, current, {
+                type: "SET_MODE",
+                mode: academyState.mode,
+              });
               dispatch({
                 type: "SAVE_ANIMATION_STATE",
-                animation: {
-                  ...initialAnimationState(definition, academyState.mode),
+                animation: reduceAnimation(definition, inCurrentMode, {
+                  type: "SEEK",
                   stageIndex,
-                  status:
-                    stageIndex === replayStageDefinitions.length - 1
-                      ? "complete"
-                      : "paused",
-                },
+                }),
               });
               const replayStage = replayStageDefinitions[stageIndex];
               if (replayStage) {
@@ -407,7 +476,14 @@ type ChapterLessonProps = {
   detailTab: DetailTab;
   onDetailTabChange: (tab: DetailTab) => void;
   onAnimationStep: (animationId: AnimationId, stageIndex: number) => void;
-  savedAnimationSteps: Record<string, number>;
+  onAnimationInput: (
+    animationId: AnimationId,
+    key: string,
+    value: SerializableScalar,
+  ) => void;
+  savedAnimations: Readonly<
+    Partial<Record<AnimationId, DeterministicAnimationState>>
+  >;
   onAnswer: (choiceId: string) => void;
   lastSelectedChoiceId?: string;
   activeIndex: number;
@@ -421,7 +497,8 @@ function ChapterLesson({
   detailTab,
   onDetailTabChange,
   onAnimationStep,
-  savedAnimationSteps,
+  onAnimationInput,
+  savedAnimations,
   onAnswer,
   lastSelectedChoiceId,
   activeIndex,
@@ -438,8 +515,116 @@ function ChapterLesson({
     (choice) => choice.id === lastSelectedChoiceId,
   );
   const correct = lastSelectedChoiceId === question.correctChoiceId;
-  const animationId = chapter.animationIds[0];
-  const Animation = animationComponents[animationId];
+  function InteractionSlot({ animationId }: { animationId?: string }) {
+    if (!animationId) return null;
+    const canonicalId = animationId as AnimationId;
+    if (!chapter.animationIds.includes(canonicalId)) return null;
+    const Animation = animationComponents[canonicalId];
+    if (!Animation) return null;
+    const saved = savedAnimations[canonicalId];
+
+    return (
+      <section className="animation-stage">
+        <div className="section-heading">
+          <div>
+            <p className="section-label">Interactive model lab</p>
+            <h2>{animationRegistry[canonicalId].title}</h2>
+          </div>
+          <span className="status-chip">deterministic · source preserved</span>
+        </div>
+        <Animation
+          mode={mode}
+          step={saved?.stageIndex ?? 0}
+          inputs={saved?.inputs}
+          onStepChange={(nextStep) =>
+            onAnimationStep(canonicalId, nextStep)
+          }
+          onInputChange={(key, value) =>
+            onAnimationInput(canonicalId, key, value)
+          }
+          autoPlayIntervalMs={1700}
+        />
+      </section>
+    );
+  }
+
+  function ChapterCheck() {
+    return (
+      <>
+        <div className="objective-list">
+          <strong>After this chapter, you can:</strong>
+          <ul>
+            {chapter.beginner.objectives.map((objective) => (
+              <li key={objective}>{objective}</li>
+            ))}
+          </ul>
+        </div>
+        {chapter.beginner.blocks.map((block, index) =>
+          renderBlock(block, `${chapter.id}-beginner-${index}`),
+        )}
+        {mode === "expert" && chapter.expert ? (
+          <aside className="expert-panel">
+            <span>Expert layer</span>
+            <p>{chapter.expert.summary}</p>
+            <ul>
+              {chapter.expert.objectives.map((objective) => (
+                <li key={objective}>{objective}</li>
+              ))}
+            </ul>
+            {chapter.expert.blocks.map((block, index) =>
+              renderBlock(block, `${chapter.id}-expert-${index}`),
+            )}
+          </aside>
+        ) : null}
+
+        <section className="knowledge-check">
+          <div>
+            <p className="section-label">Quick check</p>
+            <h2>{question.prompt}</h2>
+          </div>
+          <div className="answer-grid">
+            {question.choices.map((choice, index) => (
+              <button
+                type="button"
+                key={choice.id}
+                className={[
+                  lastSelectedChoiceId === choice.id &&
+                    (correct ? "is-correct" : "is-wrong"),
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => onAnswer(choice.id)}
+                aria-pressed={lastSelectedChoiceId === choice.id}
+              >
+                <span>{String.fromCharCode(65 + index)}</span>
+                {choice.label}
+              </button>
+            ))}
+          </div>
+          {selectedChoice ? (
+            <div
+              className={`answer-feedback ${
+                correct ? "is-correct" : "is-wrong"
+              }`}
+              role="status"
+            >
+              <strong>{correct ? "Correct." : "Try again."}</strong>
+              <p>
+                {correct
+                  ? question.explanation
+                  : "Use the chapter narrative and active animation stage as your clue."}
+              </p>
+              {correct &&
+              mode === "expert" &&
+              question.expertExplanation ? (
+                <p>{question.expertExplanation}</p>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+      </>
+    );
+  }
 
   return (
     <article className="lesson">
@@ -529,24 +714,7 @@ function ChapterLesson({
           hidden={detailTab !== "lesson"}
         >
           <p className="section-label">Core narrative · MDX</p>
-          <LessonContent />
-          <div className="objective-list">
-            <strong>After this chapter, you can:</strong>
-            <ul>{chapter.beginner.objectives.map((objective) => <li key={objective}>{objective}</li>)}</ul>
-          </div>
-          {chapter.beginner.blocks.map((block, index) =>
-            renderBlock(block, `${chapter.id}-beginner-${index}`),
-          )}
-          {mode === "expert" && chapter.expert ? (
-            <aside className="expert-panel">
-              <span>Expert layer</span>
-              <p>{chapter.expert.summary}</p>
-              <ul>{chapter.expert.objectives.map((objective) => <li key={objective}>{objective}</li>)}</ul>
-              {chapter.expert.blocks.map((block, index) =>
-                renderBlock(block, `${chapter.id}-expert-${index}`),
-              )}
-            </aside>
-          ) : null}
+          <LessonContent components={{ InteractionSlot, ChapterCheck }} />
         </div>
 
         <div
@@ -584,56 +752,6 @@ function ChapterLesson({
             ))}
           </ul>
         </div>
-      </section>
-
-      {Animation ? (
-        <section className="animation-stage">
-          <div className="section-heading">
-            <div>
-              <p className="section-label">Interactive system view</p>
-              <h2>Step through the flow</h2>
-            </div>
-            <span className="status-chip">P0 · deterministic</span>
-          </div>
-          <Animation
-            mode={mode}
-            step={savedAnimationSteps[animationId] ?? 0}
-            onStepChange={(step) => onAnimationStep(animationId, step)}
-            autoPlayIntervalMs={1700}
-          />
-        </section>
-      ) : null}
-
-      <section className="knowledge-check">
-        <div>
-          <p className="section-label">Quick check</p>
-          <h2>{question.prompt}</h2>
-        </div>
-        <div className="answer-grid">
-          {question.choices.map((choice, index) => (
-            <button
-              type="button"
-              key={choice.id}
-              className={[
-                lastSelectedChoiceId === choice.id &&
-                  (correct ? "is-correct" : "is-wrong"),
-              ].filter(Boolean).join(" ")}
-              onClick={() => onAnswer(choice.id)}
-              aria-pressed={lastSelectedChoiceId === choice.id}
-            >
-              <span>{String.fromCharCode(65 + index)}</span>{choice.label}
-            </button>
-          ))}
-        </div>
-        {selectedChoice ? (
-          <div className={`answer-feedback ${correct ? "is-correct" : "is-wrong"}`} role="status">
-            <strong>{correct ? "Correct." : "Try again."}</strong>
-            <p>{correct ? question.explanation : "Use the chapter narrative and active animation stage as your clue."}</p>
-            {correct && mode === "expert" && question.expertExplanation ? (
-              <p>{question.expertExplanation}</p>
-            ) : null}
-          </div>
-        ) : null}
       </section>
 
       <footer className="lesson-footer">

@@ -3,6 +3,7 @@ import type {
   AnimationDefinition,
   ReplayStageDefinition,
 } from "../domain/animation";
+import { glossaryTerms, sourceReferences } from "./supporting";
 
 export interface CatalogValidationIssue {
   code:
@@ -11,6 +12,7 @@ export interface CatalogValidationIssue {
     | "invalid-order"
     | "invalid-question"
     | "invalid-animation"
+    | "invalid-content"
     | "invalid-mode-contract";
   path: string;
   message: string;
@@ -27,6 +29,8 @@ export function validateAcademy(
   const questionIds = new Set(catalog.questions.map((question) => question.id));
   const animationIds = new Set(animations.map((animation) => animation.id));
   const replayIds = new Set(replayStages.map((stage) => stage.id));
+  const glossaryIds = new Set(glossaryTerms.map((term) => term.id));
+  const sourceIds = new Set(sourceReferences.map((source) => source.id));
 
   collectDuplicateIds(
     [
@@ -35,6 +39,8 @@ export function validateAcademy(
       ...catalog.questions.map((entry) => entry.id),
       ...animations.map((entry) => entry.id),
       ...replayStages.map((entry) => entry.id),
+      ...glossaryTerms.map((entry) => entry.id),
+      ...sourceReferences.map((entry) => entry.id),
     ],
     issues,
   );
@@ -63,6 +69,13 @@ export function validateAcademy(
         message: "Every chapter needs a complete beginner summary and objectives.",
       });
     }
+    if (typeof chapter.content !== "function") {
+      issues.push({
+        code: "invalid-content",
+        path: `chapters.${chapter.id}.content`,
+        message: "Every chapter needs a canonical MDX content loader.",
+      });
+    }
     chapter.questionIds.forEach((id) => {
       if (!questionIds.has(id)) {
         broken(`chapters.${chapter.id}.questionIds`, id, issues);
@@ -73,6 +86,24 @@ export function validateAcademy(
         broken(`chapters.${chapter.id}.animationIds`, id, issues);
       }
     });
+    chapter.glossaryIds.forEach((id) => {
+      if (!glossaryIds.has(id)) {
+        broken(`chapters.${chapter.id}.glossaryIds`, id, issues);
+      }
+    });
+    chapter.sourceIds.forEach((id) => {
+      if (!sourceIds.has(id)) {
+        broken(`chapters.${chapter.id}.sourceIds`, id, issues);
+      }
+    });
+    if (chapter.glossaryIds.length === 0 || chapter.sourceIds.length === 0) {
+      issues.push({
+        code: "invalid-content",
+        path: `chapters.${chapter.id}`,
+        message:
+          "Every release chapter needs glossary and primary-source references.",
+      });
+    }
     chapter.replayStageIds.forEach((id) => {
       if (!replayIds.has(id)) {
         broken(`chapters.${chapter.id}.replayStageIds`, id, issues);

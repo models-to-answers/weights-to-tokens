@@ -25,7 +25,7 @@ export function PrefillKvDecodeAnimation(props: DeterministicAnimationProps) {
   return (
     <StepAnimation
       {...props}
-      animationId="prefill-kv-decode"
+      animationId="animation.inference-system.prefill-decode"
       title="Prefill, KV cache, and decode"
       summary="See why processing the prompt differs from generating the answer."
       steps={steps}

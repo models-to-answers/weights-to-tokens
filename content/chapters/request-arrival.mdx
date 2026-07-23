@@ -11,3 +11,16 @@ requests arrive.
 
 This chapter intentionally stops at the inference boundary; it is not a
 packet-networking course.
+
+<InteractionSlot animationId="animation.inference-system.request-arrival" />
+
+## The compute layers underneath the model server
+
+The same inference runtime may sit directly on a Linux host, inside a virtual
+machine, in a Kubernetes pod, or in Kubernetes nodes that are themselves
+virtual machines. Those layers change placement, isolation, health checks, and
+the path to a usable device. They do not change the model's token computation.
+
+<InteractionSlot animationId="animation.inference-system.compute-platform" />
+
+<ChapterCheck />

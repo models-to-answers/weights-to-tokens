@@ -11,3 +11,39 @@ weights used later by inference.
 
 Training therefore stores activations, gradients, and optimizer state that
 ordinary inference does not need.
+
+### The model-building pipeline
+
+Pretraining creates broad capability and usually consumes nearly all of the
+compute. Supervised tuning teaches instruction-following. Preference training
+shapes which answers the model tends to produce. Evaluation decides whether the
+result is safe and useful enough to release.
+
+<InteractionSlot animationId="animation.model-factory.pipeline-stages" />
+
+### Turn scale into time and money
+
+Training work grows with parameter count and training tokens. More GPUs reduce
+elapsed time only to the extent that communication, input pipelines, and
+utilization allow them to. The bill can be estimated; quality still depends on
+data and engineering decisions.
+
+<InteractionSlot animationId="animation.model-factory.training-loop" />
+
+### Hand the result from training to serving
+
+A distributed checkpoint is not automatically a release. Training ranks first
+write consistent parameter and optimizer state. A publication job selects the
+serving weights, converts or shards them into the target format, attaches
+configuration and tokenizer assets, verifies integrity, and publishes an
+immutable artifact version. Inference workers load that version; they do not
+mount a live training process.
+
+### Preference signals are not truth
+
+Human or AI comparisons can train a reward model, but optimizing a proxy can
+amplify whatever raters reward—including agreeableness over accuracy.
+
+<InteractionSlot animationId="animation.model-factory.preference-trainer" />
+
+<ChapterCheck />

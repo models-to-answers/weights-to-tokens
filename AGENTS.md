@@ -19,6 +19,7 @@ Before changing code, read:
 - `docs/architecture.md` for system boundaries and extension points.
 - `docs/progress.md` for the current state and next useful work.
 - `docs/provenance.md` before copying or adapting anything from a source project.
+- `docs/migration-matrix.md` for one-to-one source coverage and exclusions.
 
 After material work, update `docs/progress.md`. If a durable architectural choice
 changes, add a dated decision to `docs/decisions.md`; do not silently rewrite an
@@ -45,8 +46,12 @@ approved decision.
 - Networking before inference is a brief arrival summary. Do not restore the
   packet-centric curriculum, generic packet journey, or VXLAN material.
 - All interactions must work without animation when reduced motion is enabled.
-- Do not merge any source repository wholesale. Migrate reviewed concepts and
-  components selectively, through this repository's types and visual system.
+- Do not merge a source application shell wholesale. Preserve every substantive
+  source lesson and rich interaction unless `docs/migration-matrix.md` records
+  an approved exclusion. Migrate them through this repository's types,
+  deterministic runtime, accessibility contract, and unified visual system.
+- A generic step-card substitute is not an acceptable migration of a richer
+  source simulator. Preserve or improve the original teaching depth.
 
 ## Working method
 

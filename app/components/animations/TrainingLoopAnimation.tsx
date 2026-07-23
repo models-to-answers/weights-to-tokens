@@ -23,7 +23,7 @@ export function TrainingLoopAnimation(props: DeterministicAnimationProps) {
   return (
     <StepAnimation
       {...props}
-      animationId="training-loop"
+      animationId="animation.model-factory.training-loop"
       title="How training changes weights"
       summary="One deterministic pass around the learning loop."
       steps={steps}

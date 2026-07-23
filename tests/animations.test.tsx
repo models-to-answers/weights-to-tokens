@@ -3,6 +3,14 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { KernelLaunchAnimation } from "@/app/components/animations";
+import {
+  DivergenceSimulator,
+  InferenceRuntimeLab,
+  LoRALab,
+  ParameterBuilderLab,
+  PreferenceTrainerLab,
+  TokenPredictorLab,
+} from "@/app/components/animations";
 import { FinalReplayExperience } from "@/app/components/FinalReplayExperience";
 
 afterEach(() => cleanup());
@@ -48,5 +56,57 @@ describe("deterministic animation controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "Advance animation" }));
     expect(screen.getByText(/Step 2 of/i)).toBeInTheDocument();
     window.matchMedia = originalMatchMedia;
+  });
+
+  it("exposes the preserved Model Factory controls and calculations", () => {
+    const changes: Array<[string, string | number | boolean | null]> = [];
+    const steps: number[] = [];
+    const { rerender } = render(
+      <TokenPredictorLab
+        inputs={{ temperature: 0.8 }}
+        onStepChange={(step) => steps.push(step)}
+        onInputChange={(key, value) => changes.push([key, value])}
+      />,
+    );
+    expect(screen.getByText("69.2%")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("slider", { name: /Temperature/ }), {
+      target: { value: "1.2" },
+    });
+    expect(changes).toContainEqual(["temperature", 1.2]);
+    fireEvent.keyDown(screen.getByRole("tab", { name: "01 Model" }), {
+      key: "ArrowRight",
+    });
+    expect(steps).toEqual([1]);
+
+    rerender(<ParameterBuilderLab mode="expert" />);
+    expect(screen.getByText("6.97B")).toBeInTheDocument();
+    expect(screen.getByText(/P ≈ Vd/)).toBeInTheDocument();
+
+    rerender(<LoRALab inputs={{ rank: 8, quantized: false }} />);
+    expect(screen.getByText(/Share of 7B model/)).toBeInTheDocument();
+  });
+
+  it("keeps preference, inference, and GPU simulators interactive", () => {
+    const preferenceChanges: Array<[string, string | number | boolean | null]> =
+      [];
+    const { rerender } = render(
+      <PreferenceTrainerLab
+        onInputChange={(key, value) =>
+          preferenceChanges.push([key, value])
+        }
+      />,
+    );
+    fireEvent.click(screen.getByText("Answer A").closest("button")!);
+    expect(preferenceChanges[0]?.[0]).toBe("pick-0");
+
+    rerender(<InferenceRuntimeLab inputs={{ concurrency: 8 }} />);
+    expect(screen.getByText("4608 MB")).toBeInTheDocument();
+    expect(screen.getByText(/Requests wait/)).toBeInTheDocument();
+
+    rerender(
+      <DivergenceSimulator inputs={{ split: 16, pathA: 5, pathB: 8 }} />,
+    );
+    expect(screen.getAllByText("13").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Paths serialize/)).toBeInTheDocument();
   });
 });

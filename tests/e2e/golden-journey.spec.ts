@@ -10,8 +10,8 @@ test("learner can use canonical content, answer, continue, and reload progress",
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("What a model carries");
   await page.getByRole("button", { name: "Expert" }).click();
   await expect(page.getByText("Expert layer")).toBeVisible();
-  await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.getByText(/Step 2 of/)).toBeVisible();
+  await page.getByRole("tab", { name: "02 GPU" }).click();
+  await expect(page.getByText(/A GPU hides memory latency/)).toBeVisible();
   await page.getByRole("button", { name: /They are repeatedly read/ }).click();
   await expect(page.getByText("Correct.")).toBeVisible();
   await page.getByRole("button", { name: "Complete & continue" }).click();
@@ -38,12 +38,34 @@ test("direct chapter route survives reload and exposes MDX, glossary, and source
   ).toBeVisible();
 
   await glossaryTab.press("ArrowRight");
-  await expect(page.getByRole("tab", { name: "Sources (1)" })).toBeFocused();
+  await expect(page.getByRole("tab", { name: "Sources (3)" })).toBeFocused();
   await expect(page.getByRole("link", { name: /Tokenizer API/ })).toBeVisible();
 
   await page.reload();
   await page.locator('[data-hydrated="true"]').waitFor();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Inference on one GPU");
+});
+
+test("rich labs update and persist their canonical stage and inputs", async ({ page }) => {
+  const temperature = page.getByRole("slider", { name: /Temperature/ });
+  await temperature.fill("1.2");
+  await page.getByRole("tab", { name: "02 GPU" }).click();
+  await page.reload();
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await expect(page.getByRole("slider", { name: /Temperature/ })).toHaveValue(
+    "1.2",
+  );
+  await expect(page.getByRole("tab", { name: "02 GPU" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await page.goto("/learn/warp-scheduler");
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await page.getByRole("button", { name: "warp 1 memory" }).click();
+  await page.reload();
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await expect(page.getByText("warp 1 is not eligible")).toBeVisible();
 });
 
 test("final replay keeps its stage across system and GPU views and links to a chapter", async ({ page }) => {
@@ -70,7 +92,7 @@ test("reset progress is explicit and clears browser-local completion", async ({ 
 
 test("reduced motion changes autoplay into deterministic advance", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.reload();
+  await page.goto("/replay");
   await page.locator('[data-hydrated="true"]').waitFor();
   await page.getByRole("button", { name: "Advance animation" }).click();
   await expect(page.getByText(/Step 2 of/)).toBeVisible();

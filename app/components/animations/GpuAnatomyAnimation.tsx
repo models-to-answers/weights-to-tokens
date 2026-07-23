@@ -25,7 +25,7 @@ export function GpuAnatomyAnimation(props: DeterministicAnimationProps) {
   return (
     <StepAnimation
       {...props}
-      animationId="gpu-anatomy"
+      animationId="animation.inside-gpu.zoom-anatomy"
       title="Zoom into a GPU"
       summary="Move from the whole device to the resources that execute an instruction."
       steps={steps}

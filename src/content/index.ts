@@ -21,8 +21,10 @@ export {
 export { lessonComponents } from "./lessons";
 export {
   glossaryForChapter,
+  glossaryRegistry,
   glossaryTerms,
   sourceReferences,
+  sourceRegistry,
   sourcesForChapter,
   type GlossaryTerm,
   type SourceReference,

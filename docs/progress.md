@@ -9,9 +9,11 @@ reviewed. The user approved the repository, architecture, source-migration,
 runtime, testing, visual-system, golden-journey, and milestone decisions now
 captured in `docs/decisions.md`.
 
-The first-release implementation is complete in the repository. The learner
-shell now renders the canonical 12-chapter catalog, MDX lessons, supporting
-registries, shared animation runtime, and versioned browser-local store.
+The first-release implementation is now a validated release candidate in the
+repository. A previous “complete” claim was withdrawn after user review exposed
+material source-coverage and animation-depth gaps. The release contract is now
+the one-to-one matrix in `docs/migration-matrix.md`, and every retained row is
+implemented and tested.
 
 ## Milestone map
 
@@ -23,7 +25,7 @@ Update status only with working, validated evidence.
 | 0 | Repository foundation, continuity docs, quality commands, shared types | Verified |
 | 1 | Unified shell, visual tokens, navigation, Beginner/Expert contract | Verified |
 | 2 | Golden-journey content spine and typed registries | Verified |
-| 3 | Shared deterministic animation runtime and P0 animations | Eight P0 animations verified |
+| 3 | Shared deterministic animation runtime and retained/new rich interactions | 22 chapter interactions verified |
 | 4 | Questions, progress, local persistence, learning summary | Golden journey verified |
 | 5 | Complete final replay and cross-chapter integration | Twelve-stage replay verified |
 | 6 | Source migration completion, accessibility, mobile, performance, release QA | Verified |
@@ -39,14 +41,20 @@ milestone's acceptance evidence has not been recorded here.
 - Pinned source baselines and established a per-item provenance process.
 - Replaced the starter preview and optional database example with a frontend-only
   academy shell.
-- Added a 12-chapter typed catalog, 12 globally unique questions, 13 animation
+- Added a 12-chapter typed catalog, 12 globally unique questions, 23 animation
   definitions, and 12 replay-stage definitions with reference validation.
 - Added one MDX narrative for every chapter and rendered them through a typed
   chapter-to-component registry.
 - Added chapter-specific glossary and primary-source panels, with keyboard
   navigation across Lesson, Glossary, and Sources.
-- Added eight shared P0 animation components with deterministic step controls
-  and Beginner/Expert projections.
+- Reimplemented all eight AI Model Academy interaction families, the retained
+  non-packet Packet Academy system interactions, and all GPU Primer interaction
+  families inside one control-room visual system.
+- Added deep labs for request admission, platform layers, artifact locality,
+  readiness gates, synchronized inference, multi-GPU collectives, throughput
+  silicon, crank-room anatomy, memory hierarchy, grid launch, divergence,
+  four-partition scheduling, coalescing, shared-memory tiling, roofline
+  diagnosis, and the 12-stage replay.
 - Connected all learner progress, answers, mode, animation stages, and replay
   state to the canonical versioned browser-local store, including an explicit
   two-step reset.
@@ -63,30 +71,33 @@ milestone's acceptance evidence has not been recorded here.
 
 ## Validation record
 
-Validated on 2026-07-23 in the pre-commit worktree:
+Validated on 2026-07-23 in the pre-commit worktree after the source-coverage
+correction:
 
 | Command | Result |
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run lint` | Passed |
-| `npm run test:unit` | Passed: 2 files, 9 tests |
+| `npm run test:unit` | Passed: 2 files, 14 tests |
 | `npm run build` | Passed |
-| `npm test` | Passed: 9 unit tests, production build, 2 rendered-HTML checks |
-| `npm run test:e2e` | Passed: 14 desktop/mobile Chromium journeys |
+| `npm test` | Passed: 14 unit tests, production build, 2 rendered-HTML checks |
+| `npm run test:e2e` | Passed: 16 desktop/mobile Chromium journeys |
 | `git diff --check` | Passed |
 
 Browser coverage confirms Expert disclosure, animation stepping, correct answer
 feedback, immediate local persistence across reload, direct routes, keyboard
 resource tabs, reset, replay zoom continuity, reduced motion, no serious or
 critical automated accessibility violations, and no document-level overflow at
-390×844. The mobile chapter rail intentionally scrolls inside its own
+390×844. Manual visual QA also covered the Model Factory token and parameter
+labs, the synchronized single-GPU runtime, the warp scheduler, and the final
+system/GPU replay. The mobile chapter rail intentionally scrolls inside its own
 navigation region.
 
 ## Next recommended work
 
-The next step is user validation of the first release. Non-P0 animations,
-additional practice interactions, and deeper chapter-specific expert
-visualizations remain post-v1 candidates rather than release blockers.
+The next step is user validation of the release candidate. Further practice
+questions, scenarios, or visual refinements are post-v1 enhancements rather
+than missing source migrations.
 
 ## Open questions
 

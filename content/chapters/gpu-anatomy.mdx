@@ -1,3 +1,12 @@
+## Why the GPU is built differently
+
+A CPU devotes substantial silicon to sophisticated control, large caches, and
+fast execution of a small number of threads. A GPU accepts more latency per
+thread and devotes far more of its area to parallel arithmetic. That trade only
+pays when the workload exposes enough independent, regular work.
+
+<InteractionSlot animationId="animation.inside-gpu.throughput-silicon" />
+
 ## A hierarchy built for throughput
 
 High-bandwidth memory holds weights, KV-cache blocks, and working tensors. Cache
@@ -9,3 +18,7 @@ when one warp waits on a dependency or memory.
 
 Exact unit counts vary by GPU generation. The durable mental model is the
 device-to-SM-to-warp-to-execution-unit hierarchy.
+
+<InteractionSlot animationId="animation.inside-gpu.zoom-anatomy" />
+
+<ChapterCheck />

@@ -36,7 +36,7 @@ test("server-renders direct chapter and replay routes", async () => {
   assert.match(chapterHtml, /Inference on one GPU/);
   assert.match(chapterHtml, /Read the prompt, then extend it/);
   assert.match(chapterHtml, /Glossary \(2\)/);
-  assert.match(chapterHtml, /Sources \(1\)/);
+  assert.match(chapterHtml, /Sources \(3\)/);
 
   const replayResponse = await render("/replay");
   assert.equal(replayResponse.status, 200);

@@ -5,10 +5,17 @@ import type {
   AnimationId,
   ChapterId,
   LearningMode,
+  MultipleChoiceQuestion,
   QuestionId,
   ReplayStageId,
 } from "../domain/catalog";
 import type { DeterministicAnimationState } from "../domain/animation";
+import {
+  animationRegistry,
+  chapterRegistry,
+  questionRegistry,
+  replayStageRegistry,
+} from "../content/catalog";
 
 export const ACADEMY_STATE_VERSION = 1;
 export const ACADEMY_STORAGE_KEY = "from-weights-to-tokens:progress";
@@ -142,7 +149,7 @@ export function createAcademyStore(
       const next = academyReducer(state, action);
       if (next === state) return;
       state = next;
-      saveAcademyState(storage, state);
+      saveAcademyState(storage ?? browserStorage(), state);
       listeners.forEach((listener) => listener());
     },
     subscribe(listener) {
@@ -220,15 +227,15 @@ export function migrateAcademyState(value: unknown): AcademyState {
     mode: value.mode === "expert" ? "expert" : "beginner",
     completedBeginnerChapterIds: stringArray(
       value.completedBeginnerChapterIds,
-    ) as ChapterId[],
+    ).filter((id): id is ChapterId => id in chapterRegistry),
     exploredExpertChapterIds: stringArray(
       value.exploredExpertChapterIds,
-    ) as ChapterId[],
+    ).filter((id): id is ChapterId => id in chapterRegistry),
     questionAttempts: validAttempts(value.questionAttempts),
     animationStates: validAnimationStates(value.animationStates),
     completedReplayStageIds: stringArray(
       value.completedReplayStageIds,
-    ) as ReplayStageId[],
+    ).filter((id): id is ReplayStageId => id in replayStageRegistry),
     finalReplayCompleted: value.finalReplayCompleted === true,
   };
 }
@@ -257,20 +264,27 @@ function validAttempts(
   if (!isRecord(value)) return {};
   const result: Partial<Record<QuestionId, readonly QuestionAttempt[]>> = {};
   Object.entries(value).forEach(([questionId, attempts]) => {
-    if (!Array.isArray(attempts)) return;
+    if (!(questionId in questionRegistry) || !Array.isArray(attempts)) return;
+    const question = (
+      questionRegistry as Readonly<
+        Record<QuestionId, MultipleChoiceQuestion>
+      >
+    )[questionId as QuestionId];
     result[questionId as QuestionId] = attempts.flatMap((attempt) => {
       if (
         !isRecord(attempt) ||
         typeof attempt.selectedChoiceId !== "string" ||
-        typeof attempt.correct !== "boolean" ||
-        typeof attempt.attemptedAt !== "string"
+        typeof attempt.attemptedAt !== "string" ||
+        !question.choices.some(
+          (choice) => choice.id === attempt.selectedChoiceId,
+        )
       ) {
         return [];
       }
       return [
         {
           selectedChoiceId: attempt.selectedChoiceId,
-          correct: attempt.correct,
+          correct: attempt.selectedChoiceId === question.correctChoiceId,
           attemptedAt: attempt.attemptedAt,
         },
       ];
@@ -286,9 +300,12 @@ function validAnimationStates(
   const result: Partial<Record<AnimationId, DeterministicAnimationState>> = {};
 
   Object.entries(value).forEach(([animationId, animation]) => {
+    const definition =
+      animationRegistry[animationId as keyof typeof animationRegistry];
     if (
+      !definition ||
       !isRecord(animation) ||
-      typeof animation.animationId !== "string" ||
+      animation.animationId !== animationId ||
       typeof animation.stageIndex !== "number" ||
       !["idle", "playing", "paused", "complete"].includes(
         String(animation.status),
@@ -299,14 +316,19 @@ function validAnimationStates(
     }
     result[animationId as AnimationId] = {
       animationId: animation.animationId as AnimationId,
-      stageIndex: Math.max(0, Math.floor(animation.stageIndex)),
+      stageIndex: Math.min(
+        definition.stages.length - 1,
+        Math.max(0, Math.floor(animation.stageIndex)),
+      ),
       status: animation.status as DeterministicAnimationState["status"],
       speed: animation.speed as DeterministicAnimationState["speed"],
       mode: animation.mode === "expert" ? "expert" : "beginner",
       inputs: isRecord(animation.inputs)
         ? sanitizeScalars(animation.inputs)
         : {},
-      completedCheckpointIds: stringArray(animation.completedCheckpointIds),
+      completedCheckpointIds: stringArray(
+        animation.completedCheckpointIds,
+      ).filter((id) => definition.stages.some((stage) => stage.id === id)),
     };
   });
 
@@ -328,4 +350,3 @@ function sanitizeScalars(
     }),
   ) as DeterministicAnimationState["inputs"];
 }
-

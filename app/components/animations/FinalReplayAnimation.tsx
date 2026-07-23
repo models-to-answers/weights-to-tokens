@@ -1,11 +1,11 @@
 "use client";
 
-import { StepAnimation } from "./StepAnimation";
+import { PlaybackControls } from "../PlaybackControls";
 import type {
   AnimationStep,
   DeterministicAnimationProps,
-  DiagramNode,
 } from "./types";
+import { useDeterministicPlayback } from "./useDeterministicPlayback";
 
 export type ReplayView = "system" | "gpu";
 
@@ -28,51 +28,88 @@ const steps: AnimationStep[] = [
   { id: "stream", title: "The token is streamed", beginner: "The token becomes text and appears in the response.", expert: "Detokenization and stop rules convert generated IDs into incremental response events." },
 ];
 
-const systemNodes: DiagramNode[] = [
-  { id: "weights", label: "Learned weights", detail: "training output" },
-  { id: "artifact", label: "Model artifact", detail: "weights + config + tokenizer" },
-  { id: "ready", label: "Ready worker", detail: "loaded + warmed" },
-  { id: "arrival", label: "Admitted request", detail: "route + capacity" },
-  { id: "tokens", label: "Input tokens", detail: "text → IDs" },
-  { id: "prefill", label: "Prefill", detail: "context processing" },
-  { id: "gpu", label: "GPU runtime", detail: "ordered operations" },
-  { id: "kernel", label: "Kernel launch", detail: "grid + blocks" },
-  { id: "warps", label: "Execution", detail: "warps issue" },
-  { id: "memory", label: "Memory service", detail: "operands move" },
-  { id: "decode", label: "Decode loop", detail: "next-token iteration" },
-  { id: "stream", label: "Streamed text", detail: "IDs → response" },
-];
+const systemLabels = [
+  "Learned weights", "Model artifact", "Ready worker", "Admitted request",
+  "Input tokens", "Prefill", "GPU runtime", "Kernel launch", "Execution",
+  "Memory service", "Decode loop", "Streamed text",
+] as const;
 
-const gpuNodes: DiagramNode[] = [
-  { id: "weights", label: "Checkpoint tensors", detail: "learned values" },
-  { id: "artifact", label: "Weight shards", detail: "typed + shaped" },
-  { id: "ready", label: "HBM placement", detail: "weights resident" },
-  { id: "arrival", label: "Work queue", detail: "request admitted" },
-  { id: "tokens", label: "Input buffers", detail: "token IDs" },
-  { id: "prefill", label: "Prefill kernels", detail: "KV blocks created" },
-  { id: "gpu", label: "Command stream", detail: "dependencies ordered" },
-  { id: "kernel", label: "Grid → blocks", detail: "assigned to SMs" },
-  { id: "warps", label: "Warp schedulers", detail: "ready instructions" },
-  { id: "memory", label: "Cache → HBM", detail: "coalesced traffic" },
-  { id: "decode", label: "Decode kernels", detail: "logits + KV append" },
-  { id: "stream", label: "Output buffer", detail: "token returned" },
-];
+const gpuLabels = [
+  "Checkpoint tensors", "Weight shards", "HBM placement", "Work queue",
+  "Input buffers", "Prefill kernels", "Command stream", "Grid → blocks",
+  "Warp schedulers", "Cache → HBM", "Decode kernels", "Output buffer",
+] as const;
 
 export function FinalReplayAnimation({
   view = "system",
   ...props
 }: FinalReplayAnimationProps) {
-  const nodes = view === "system" ? systemNodes : gpuNodes;
+  const playback = useDeterministicPlayback({
+    step: props.step,
+    defaultStep: props.defaultStep,
+    stepCount: steps.length,
+    autoPlayIntervalMs: props.autoPlayIntervalMs,
+    onStepChange: props.onStepChange,
+  });
+  const active = playback.currentStep;
+  const activeStep = steps[active];
+  const labels = view === "system" ? systemLabels : gpuLabels;
   return (
-    <StepAnimation
-      {...props}
-      animationId={`final-replay-${view}`}
-      title={view === "system" ? "One prompt: system view" : "One prompt: GPU view"}
-      summary="The timeline stays fixed while the zoom level changes."
-      steps={steps}
-      nodes={nodes}
-      activeNodeIds={(step) => nodes.slice(0, step + 1).map((node) => node.id)}
-    />
+    <section className="replay-console" data-animation-id="animation.replay.one-prompt">
+      <header>
+        <div>
+          <p>{props.mode === "expert" ? "Expert replay" : "Beginner replay"}</p>
+          <h3>{view === "system" ? "One prompt: system view" : "One prompt: GPU view"}</h3>
+        </div>
+        <span>one timeline · two zoom levels</span>
+      </header>
+      <div className="replay-console__rail" role="img" aria-label={`Stage ${active + 1}: ${activeStep.title}. ${activeStep.beginner}`}>
+        {labels.map((label, index) => (
+          <button
+            type="button"
+            className={index < active ? "is-past" : index === active ? "is-active" : ""}
+            onClick={() => props.onStepChange?.(index)}
+            key={label}
+          >
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{label}</strong>
+          </button>
+        ))}
+      </div>
+      <div className="replay-console__scene">
+        <div className="replay-scene__model">
+          <span>Model state</span>
+          <div>{Array.from({ length: 12 }, (_, index) => <i className={index <= active ? "is-live" : ""} key={index} />)}</div>
+          <strong>{active < 2 ? "being created" : active < 6 ? "resident and reused" : "feeding GPU work"}</strong>
+        </div>
+        <div className="replay-scene__request">
+          <span>Request state</span>
+          <div className="token-ribbon">{["How", "do", "GPUs", "work", "?"].map((token, index) => <i className={active >= 4 && index <= active - 4 ? "is-live" : ""} key={token}>{token}</i>)}</div>
+          <strong>{active < 3 ? "not admitted" : active < 10 ? "in flight" : "generating output"}</strong>
+        </div>
+        <div className="replay-scene__gpu">
+          <span>GPU state</span>
+          <div>{Array.from({ length: 32 }, (_, index) => <i className={active >= 5 && index < Math.min(32, (active - 4) * 6) ? "is-live" : ""} key={index} />)}</div>
+          <strong>{active < 5 ? "idle / ready" : active < 10 ? "kernels and warps active" : "decode iteration"}</strong>
+        </div>
+      </div>
+      <div className="replay-console__explanation" aria-live="polite">
+        <div><span>Stage {active + 1} of {steps.length}</span><strong>{activeStep.title}</strong></div>
+        <p>{activeStep.beginner}</p>
+        {props.mode === "expert" && activeStep.expert ? <p>{activeStep.expert}</p> : null}
+      </div>
+      <PlaybackControls
+        currentStep={active}
+        totalSteps={steps.length}
+        isPlaying={playback.isPlaying}
+        onPrevious={playback.previous}
+        onNext={playback.next}
+        onPlayPause={playback.togglePlayback}
+        onReset={playback.reset}
+        label="One prompt replay playback"
+        reducedMotion={playback.reducedMotion}
+      />
+    </section>
   );
 }
 

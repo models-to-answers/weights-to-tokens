@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { AnimationId } from "@/src/domain";
 import { PlaybackControls } from "../PlaybackControls";
 import type {
   AnimationStep,
@@ -10,7 +11,7 @@ import type {
 import { useDeterministicPlayback } from "./useDeterministicPlayback";
 
 type StepAnimationProps = DeterministicAnimationProps & {
-  animationId: string;
+  animationId: AnimationId;
   title: string;
   summary: string;
   steps: readonly AnimationStep[];
