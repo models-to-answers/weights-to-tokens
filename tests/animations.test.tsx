@@ -181,6 +181,10 @@ describe("deterministic animation controls", () => {
     expect(
       screen.getByText(/Real SMs may have multiple scheduler partitions/),
     ).toBeInTheDocument();
+
+    rerender(<SchedulerTraceLab step={4} />);
+    expect(screen.getByText("Completion: W0 data returns")).toBeInTheDocument();
+    expect(screen.queryByText("Issue: W0 · data")).not.toBeInTheDocument();
   });
 
   it("presents HBM stacks as an illustrative variable-count package layout", () => {

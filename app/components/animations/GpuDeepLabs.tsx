@@ -377,7 +377,7 @@ const SCHEDULER_TIMELINE = [
   { issued: "W0 · LD", w0: "issued load", w1: "ready · FP32", w2: "dependency", pipeline: "LD/ST", memory: "W0 load request sent", compute: "No arithmetic active", overlap: "The load leaves the scheduler and begins its memory journey.", eligible: "Warp 1", note: "Warp 0 issues a memory load." },
   { issued: "—", w0: "memory wait", w1: "ready · FP32", w2: "dependency", pipeline: "none", memory: "W0 memory request remains in flight.", compute: "FP32 pipeline available", overlap: "Memory request in flight; no arithmetic issued this stage.", eligible: "Warp 1", note: "Warp 0 is resident but temporarily ineligible." },
   { issued: "W1 · FP32", w0: "memory wait", w1: "issued FP32", w2: "dependency", pipeline: "FP32", memory: "W0 memory request remains in flight.", compute: "W1 FP32 arithmetic active", overlap: "W0 memory request + W1 FP32 arithmetic overlap", eligible: "Warp 1", note: "The scheduler hides Warp 0's wait by issuing independent Warp 1." },
-  { issued: "return", w0: "ready · ADD", w1: "ready · FP32", w2: "dependency", pipeline: "none", memory: "W0 data returns", compute: "W1 FP32 instruction complete", overlap: "The returning data makes Warp 0 eligible again.", eligible: "Warp 0 and Warp 1", note: "Warp 0's operands return and its dependency clears." },
+  { issued: "W0 · data", w0: "ready · ADD", w1: "ready · FP32", w2: "dependency", pipeline: "none", memory: "W0 data returns", compute: "W1 FP32 instruction complete", overlap: "The returning data makes Warp 0 eligible again.", eligible: "Warp 0 and Warp 1", note: "Warp 0's operands return and its dependency clears." },
   { issued: "W0 · ADD", w0: "issued ADD", w1: "ready · FP32", w2: "dependency", pipeline: "FP32", memory: "W0 load complete", compute: "W0 ADD active", overlap: "Warp 0 resumes on the arithmetic pipeline.", eligible: "Warp 1", note: "Warp 0 becomes eligible and resumes." },
 ] as const;
 
@@ -407,7 +407,7 @@ export function SchedulerTraceLab({
         </div>
         <div className="scheduler-story__decision">
           <span>Scoreboard + scheduler</span>
-          <strong>{state.issued === "—" ? "Inspect eligibility" : `Issue: ${state.issued}`}</strong>
+          <strong>{active === 4 ? "Completion: W0 data returns" : state.issued === "—" ? "Inspect eligibility" : `Issue: ${state.issued}`}</strong>
           <p>{state.note}</p>
         </div>
         <div className="scheduler-story__pipelines">
