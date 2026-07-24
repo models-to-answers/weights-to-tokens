@@ -12,17 +12,25 @@ async function render(path = "/") {
   );
 }
 
-test("server-renders the academy shell", async () => {
+test("server-renders the academy introduction", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>From Weights to Tokens<\/title>/i);
+  assert.match(html, /<title>How AI Models Become Answers<\/title>/i);
+  assert.match(html, /How AI Models Become Answers/i);
+  assert.match(html, /From Weights to Tokens: An Interactive Journey/i);
+  assert.match(html, /Who this is for/i);
+  assert.match(html, /What you will understand/i);
   assert.match(html, /Model Factory/i);
   assert.match(html, /The learning promise/i);
   assert.match(html, /single-GPU inference/i);
-  assert.match(html, /multi-GPU execution/i);
+  assert.match(html, /multiple GPUs/i);
+  assert.match(html, /One Prompt, End to End/i);
+  assert.match(html, /Maintained by.*Sreenivas Makam.*Ritesh Dhoot/is);
+  assert.match(html, /Share feedback/i);
+  assert.match(html, /docs\.google\.com\/forms\/.+\/viewform/i);
   assert.match(html, /Beginner/);
   assert.match(html, /Expert/);
   assert.match(html, /saved only in this browser/i);

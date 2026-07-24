@@ -247,3 +247,30 @@ implementations performing the same useful work; arithmetic intensity is
 derived from work divided by bytes moved and is not presented as an arbitrary
 setting. The Expert interaction may be hidden from Beginner under D-003 because
 the diagnostic model would overload the essential path.
+
+### D-020 — The academy opens with an unscored introduction
+
+- **Status:** Approved
+- **Date:** 2026-07-24
+
+The product name is **How AI Models Become Answers**. “From Weights to Tokens”
+remains the technical subtitle and journey theme.
+
+The root route is an unscored introduction rather than the first Model Factory
+chapter. It owns the site-level learning promise, intended audience, key
+outcomes, Beginner/Expert explanation, and four direct entry points: Model
+Factory, Inference System, Inside the GPU, and the final one-prompt replay.
+Learner progress still counts only thirteen chapters plus the final replay.
+
+### D-021 — Feedback is collected outside learner state
+
+- **Status:** Approved
+- **Date:** 2026-07-24
+
+The academy identifies Sreenivas Makam and Ritesh Dhoot as maintainers. A
+site-wide feedback link opens a public Google Form whose responses are stored
+in a linked Google Sheet and may trigger owner notifications.
+
+Feedback is not stored in browser-local learner state or transmitted to an
+academy backend. The form warns respondents not to submit confidential or
+sensitive information and makes a reply email optional.

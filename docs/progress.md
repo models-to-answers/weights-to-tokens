@@ -115,6 +115,18 @@ milestone's acceptance evidence has not been recorded here.
 - Reframed the roofline as an Expert-only comparison of the same useful work
   under naive and reuse-oriented data plans. Arithmetic intensity now changes
   because bytes moved change, rather than appearing to be an independent knob.
+- Renamed the learner-facing product to “How AI Models Become Answers,” while
+  retaining “From Weights to Tokens” as the technical subtitle.
+- Added an unscored introduction at `/` with the site-level learning promise,
+  intended audience, six outcomes, Beginner/Expert guidance, and direct entry
+  cards for Model Factory, Inference System, Inside the GPU, and the final
+  one-prompt replay. The first Model Factory chapter now begins directly with
+  its lesson rather than repeating the site-level promise.
+- Added site-wide attribution for Sreenivas Makam and Ritesh Dhoot, plus a
+  published Google feedback form linked from the introduction and footer. Form
+  responses are stored outside learner state in a linked Google Sheet.
+- Refreshed title, description, Open Graph metadata, and the 1200×630 social
+  preview card for the new product identity.
 - Enabled GitHub-flavored Markdown tables and removed learner-visible internal
   implementation labels.
 - Completed a Chrome playback audit of all 44 chapter animation projections
@@ -134,7 +146,7 @@ Current validation on 2026-07-24:
 | `npm run test:unit` | Passed: 3 files, 33 tests |
 | `npm run build` | Passed |
 | `npm test` | Passed: 33 unit/component tests, production build, 2 rendered-HTML checks |
-| `npm run test:e2e` | Passed: 28 desktop/mobile Chromium journeys |
+| `npm run test:e2e` | Passed: 30 desktop/mobile Chromium journeys |
 | `git diff --check` | Passed |
 
 Browser coverage confirms every interaction exposed by each learning mode
@@ -143,7 +155,9 @@ disclosure, correct answer
 feedback, immediate local persistence across reload, direct routes, keyboard
 resource tabs, reset, replay zoom continuity, reduced motion, no serious or
 critical automated accessibility violations, and no document-level overflow at
-390×844. Manual Chrome QA also covered Model Factory parameter, training,
+390×844. It also confirms the introduction copy, all four direct-entry links,
+feedback link, reset-to-introduction behavior, and unchanged 14-item progress
+denominator. Manual Chrome QA also covered Model Factory parameter, training,
 preference, and LoRA labs; single-GPU inference; GPU anatomy; kernel launch; and
 the final System/GPU replay. The mobile chapter rail intentionally scrolls
 inside its own navigation region.

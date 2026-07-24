@@ -13,23 +13,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "From Weights to Tokens",
+  title: "How AI Models Become Answers",
   description:
-    "An interactive academy for AI models, inference systems, and GPU execution.",
+    "An interactive journey from model creation, through inference, into GPU execution and the generated answer.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
   },
   openGraph: {
-    title: "From Weights to Tokens",
+    title: "How AI Models Become Answers",
     description:
-      "Understand AI models, inference systems, and GPU execution as one connected journey.",
+      "From weights to tokens: understand models, inference systems, and GPU execution as one connected journey.",
     images: [
       {
         url: "/social-card.png",
         width: 1200,
         height: 630,
-        alt: "From Weights to Tokens: model weights flow through a GPU into streamed tokens",
+        alt: "How AI Models Become Answers: an interactive journey through models, inference, and GPUs",
       },
     ],
   },
@@ -46,7 +46,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <a className="skip-link" href="#main-content">
-          Skip to lesson
+          Skip to content
         </a>
         {children}
       </body>

@@ -59,14 +59,20 @@ import {
   WeightsSpectrumLab,
 } from "./animations";
 import type { DeterministicAnimationProps } from "./animations/types";
+import { AcademyIntroduction } from "./AcademyIntroduction";
 import { FinalReplayExperience } from "./FinalReplayExperience";
 
 type DetailTab = "lesson" | "glossary" | "sources";
+
+const FEEDBACK_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLScZOUdozZNcvk-p5mtCGDVUFIqaAZSZcQDQiIz83WGkcmx8Og/viewform?usp=header";
 
 type AcademyAppProps = {
   initialChapterSlug?: string;
   initialReplay?: boolean;
 };
+
+type AcademyView = ChapterId | "home" | "replay";
 
 export const animationComponents: Partial<
   Record<AnimationId, ComponentType<DeterministicAnimationProps>>
@@ -104,15 +110,16 @@ function useHydrated(): boolean {
   );
 }
 
-function viewFromPathname(pathname: string): ChapterId | "replay" {
+function viewFromPathname(pathname: string): AcademyView {
+  if (pathname === "/") return "home";
   if (pathname === "/replay") return "replay";
   const slug = pathname.match(/^\/learn\/([^/]+)\/?$/)?.[1];
   return (
-    chapters.find((chapter) => chapter.slug === slug)?.id ?? chapters[0].id
+    chapters.find((chapter) => chapter.slug === slug)?.id ?? "home"
   );
 }
 
-function initialView(props: AcademyAppProps): ChapterId | "replay" {
+function initialView(props: AcademyAppProps): AcademyView {
   if (props.initialReplay) return "replay";
   if (props.initialChapterSlug) {
     return (
@@ -120,7 +127,7 @@ function initialView(props: AcademyAppProps): ChapterId | "replay" {
       chapters[0].id
     );
   }
-  return chapters[0].id;
+  return "home";
 }
 
 function chapterPath(chapter: ChapterDefinition): string {
@@ -150,14 +157,14 @@ function renderBlock(
 export function AcademyApp(props: AcademyAppProps) {
   const hydrated = useHydrated();
   const [academyState, dispatch] = useAcademyStore((state) => state);
-  const [activeView, setActiveView] = useState<ChapterId | "replay">(
+  const [activeView, setActiveView] = useState<AcademyView>(
     initialView(props),
   );
   const [detailTab, setDetailTab] = useState<DetailTab>("lesson");
   const [resetArmed, setResetArmed] = useState(false);
 
   const activeChapter =
-    activeView === "replay"
+    activeView === "replay" || activeView === "home"
       ? null
       : chapters.find((chapter) => chapter.id === activeView) ?? chapters[0];
   const activeIndex = activeChapter
@@ -227,9 +234,11 @@ export function AcademyApp(props: AcademyAppProps) {
     }
   }, [activeView, dispatch]);
 
-  function navigate(view: ChapterId | "replay", replace = false) {
+  function navigate(view: AcademyView, replace = false) {
     const path =
-      view === "replay"
+      view === "home"
+        ? "/"
+        : view === "replay"
         ? "/replay"
         : chapterPath(chapters.find((chapter) => chapter.id === view)!);
     window.history[replace ? "replaceState" : "pushState"]({}, "", path);
@@ -266,7 +275,7 @@ export function AcademyApp(props: AcademyAppProps) {
   function confirmReset() {
     dispatch({ type: "RESET_PROGRESS" });
     setResetArmed(false);
-    navigate(chapters[0].id, true);
+    navigate("home", true);
   }
 
   return (
@@ -276,13 +285,23 @@ export function AcademyApp(props: AcademyAppProps) {
       aria-busy={!hydrated}
     >
       <aside className="academy-sidebar" aria-label="Academy navigation">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">W→T</span>
+        {/* The root anchor is intentionally intercepted to preserve academy state. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
+          className="brand-lockup"
+          href="/"
+          onClick={(event) => {
+            event.preventDefault();
+            navigate("home");
+          }}
+          aria-label="How AI Models Become Answers introduction"
+        >
+          <span className="brand-mark" aria-hidden="true">M→A</span>
           <div>
-            <p className="brand-kicker">Interactive academy</p>
-            <p className="brand-name">From Weights to Tokens</p>
+            <p className="brand-kicker">From weights to tokens</p>
+            <p className="brand-name">How AI Models Become Answers</p>
           </div>
-        </div>
+        </a>
 
         <div
           className="progress-panel"
@@ -300,6 +319,24 @@ export function AcademyApp(props: AcademyAppProps) {
         </div>
 
         <nav className="chapter-nav" aria-label="Chapters">
+          <section className="nav-part nav-part--introduction">
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a
+              className={[
+                "chapter-link",
+                activeView === "home" && "chapter-link--active",
+              ].filter(Boolean).join(" ")}
+              href="/"
+              onClick={(event) => {
+                event.preventDefault();
+                navigate("home");
+              }}
+              aria-current={activeView === "home" ? "page" : undefined}
+            >
+              <span className="chapter-link__number">I</span>
+              <span className="chapter-link__title">Introduction</span>
+            </a>
+          </section>
           {groupedParts.map((group) => (
             <section className="nav-part" key={group.id}>
               <p>Part {group.order} · {group.shortTitle}</p>
@@ -388,30 +425,42 @@ export function AcademyApp(props: AcademyAppProps) {
         <header className="topbar">
           <div>
             <p className="topbar__eyebrow">
-              {activePart
+              {activeView === "home"
+                ? "Introduction · Your journey"
+                : activePart
                 ? `Part ${activePart.order} · ${activePart.shortTitle}`
                 : "Finale · One prompt"}
             </p>
             <p className="topbar__context">
-              {activePart?.promise ?? "Replay the same request at system and GPU zoom levels."}
+              {activeView === "home"
+                ? "See how models are created, served, and executed as one connected story."
+                : activePart?.promise ??
+                  "Replay the same request at system and GPU zoom levels."}
             </p>
           </div>
-          <div className="mode-switch" role="group" aria-label="Learning depth">
-            {(["beginner", "expert"] as LearningMode[]).map((mode) => (
-              <button
-                type="button"
-                key={mode}
-                className={academyState.mode === mode ? "is-active" : ""}
-                onClick={() => changeMode(mode)}
-                aria-pressed={academyState.mode === mode}
-              >
-                {mode === "beginner" ? "Beginner" : "Expert"}
-              </button>
-            ))}
-          </div>
+          {activeView !== "home" ? (
+            <div className="mode-switch" role="group" aria-label="Learning depth">
+              {(["beginner", "expert"] as LearningMode[]).map((mode) => (
+                <button
+                  type="button"
+                  key={mode}
+                  className={academyState.mode === mode ? "is-active" : ""}
+                  onClick={() => changeMode(mode)}
+                  aria-pressed={academyState.mode === mode}
+                >
+                  {mode === "beginner" ? "Beginner" : "Expert"}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </header>
 
-        {activeChapter ? (
+        {activeView === "home" ? (
+          <AcademyIntroduction
+            onNavigate={(destination) => navigate(destination)}
+            feedbackUrl={FEEDBACK_FORM_URL}
+          />
+        ) : activeChapter ? (
           <ChapterLesson
             chapter={activeChapter}
             mode={academyState.mode}
@@ -518,6 +567,23 @@ export function AcademyApp(props: AcademyAppProps) {
             onComplete={completeAndContinue}
           />
         )}
+
+        <footer className="academy-footer">
+          <p>
+            Maintained by <strong>Sreenivas Makam</strong> and{" "}
+            <strong>Ritesh Dhoot</strong>.
+          </p>
+          <div>
+            <span>Built for people who want to understand the whole AI journey.</span>
+            <a
+              href={FEEDBACK_FORM_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Share feedback
+            </a>
+          </div>
+        </footer>
       </main>
     </div>
   );
@@ -704,22 +770,6 @@ function ChapterLesson({
           </p>
         </div>
       </div>
-
-      {chapter.id === chapters[0].id ? (
-        <section className="academy-promise">
-          <p className="section-label">The learning promise</p>
-          <h2>See the entire path, then zoom in without losing the thread.</h2>
-          <div className="promise-grid">
-            {parts.map((part) => (
-              <div key={part.id}>
-                <span>0{part.order}</span>
-                <strong>{part.shortTitle}</strong>
-                <p>{part.promise}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
 
       <section className="lesson-tabs">
         <div className="tab-list" role="tablist" aria-label="Lesson resources">

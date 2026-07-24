@@ -2,8 +2,89 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
+  await page.goto("/learn/weights");
+  await page.locator('[data-hydrated="true"]').waitFor();
+});
+
+test("introduction explains the academy and opens each part without affecting progress", async ({
+  page,
+}) => {
   await page.goto("/");
   await page.locator('[data-hydrated="true"]').waitFor();
+
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "How AI Models Become Answers",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Follow an AI model from how it is created and packaged, through inference, into the GPU, until the final answer is generated.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Who this is for" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What you will understand" })).toBeVisible();
+  await expect(page.getByText("Beginner is the complete guided path.")).toBeVisible();
+  await expect(page.getByText("Expert adds the mechanisms underneath.")).toBeVisible();
+  await expect(page.getByText(/Maintained by Sreenivas Makam and Ritesh Dhoot/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Share feedback" }).first()).toHaveAttribute(
+    "href",
+    /docs\.google\.com\/forms\/.+\/viewform/,
+  );
+  await expect(page.getByLabel(/complete$/)).toContainText("Core 0/14");
+
+  const overflow = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(
+    accessibility.violations.filter((violation) =>
+      ["serious", "critical"].includes(violation.impact ?? ""),
+    ),
+  ).toEqual([]);
+
+  const recommendedStart = page.getByRole("link", {
+    name: "Start the recommended journey",
+  });
+  await recommendedStart.focus();
+  await recommendedStart.press("Enter");
+  await expect(page).toHaveURL(/\/learn\/weights$/);
+  await page.goBack();
+  await page.locator('[data-hydrated="true"]').waitFor();
+
+  const journey = page.getByRole("navigation", { name: "Choose a journey section" });
+  await expect(journey.getByRole("link")).toHaveCount(4);
+
+  await journey.getByRole("link", { name: /Model Factory/ }).click();
+  await expect(page).toHaveURL(/\/learn\/weights$/);
+  await page.goBack();
+  await page.locator('[data-hydrated="true"]').waitFor();
+
+  await page
+    .getByRole("navigation", { name: "Choose a journey section" })
+    .getByRole("link", { name: /Inference System/ })
+    .click();
+  await expect(page).toHaveURL(/\/learn\/request-arrival$/);
+  await page.goBack();
+  await page.locator('[data-hydrated="true"]').waitFor();
+
+  await page
+    .getByRole("navigation", { name: "Choose a journey section" })
+    .getByRole("link", { name: /Inside the GPU/ })
+    .click();
+  await expect(page).toHaveURL(/\/learn\/gpu-anatomy$/);
+  await page.goBack();
+  await page.locator('[data-hydrated="true"]').waitFor();
+
+  await page
+    .getByRole("navigation", { name: "Choose a journey section" })
+    .getByRole("link", { name: /One Prompt, End to End/ })
+    .click();
+  await expect(page).toHaveURL(/\/replay$/);
 });
 
 test("learner can use canonical content, answer, continue, and reload progress", async ({ page }) => {
@@ -325,7 +406,10 @@ test("reset progress is explicit and clears browser-local completion", async ({ 
   await page.getByRole("button", { name: "Reset local progress" }).click();
   await expect(page.getByRole("group", { name: "Confirm progress reset" })).toBeVisible();
   await page.getByRole("button", { name: "Yes, reset" }).click();
-  await expect(page).toHaveURL(/\/learn\/weights$/);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(
+    page.getByRole("heading", { name: "How AI Models Become Answers" }),
+  ).toBeVisible();
   await expect(page.getByLabel("0% complete")).toBeVisible();
 });
 
