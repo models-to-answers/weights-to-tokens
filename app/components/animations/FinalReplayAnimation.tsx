@@ -1,10 +1,8 @@
 "use client";
 
+import { animationStageLabels } from "@/src/content/animation-stages";
 import { PlaybackControls } from "../PlaybackControls";
-import type {
-  AnimationStep,
-  DeterministicAnimationProps,
-} from "./types";
+import type { AnimationStep, DeterministicAnimationProps } from "./types";
 import { useDeterministicPlayback } from "./useDeterministicPlayback";
 
 export type ReplayView = "system" | "gpu";
@@ -13,32 +11,81 @@ type FinalReplayAnimationProps = DeterministicAnimationProps & {
   view?: ReplayView;
 };
 
+const titles = animationStageLabels["animation.replay.one-prompt"];
 const steps: AnimationStep[] = [
-  { id: "weights", title: "Weights are learned", beginner: "Training produces reusable model weights.", expert: "Loss gradients and optimizer updates have produced a versioned checkpoint." },
-  { id: "artifact", title: "The artifact is stored", beginner: "Weights, configuration, and tokenizer assets are packaged together.", expert: "Immutable shards and a manifest preserve tensor layout, precision, and compatibility metadata." },
-  { id: "ready", title: "The model becomes ready", beginner: "Workers load and warm the model on one or more GPUs.", expert: "Ranks allocate HBM, load shards, initialize communication, warm kernels, and pass readiness checks." },
-  { id: "arrival", title: "A prompt is admitted", beginner: "The serving system accepts and schedules the request.", expert: "Routing and admission control select a healthy worker with suitable capacity and cache locality." },
-  { id: "tokens", title: "Text becomes token IDs", beginner: "The tokenizer converts the prompt into model input IDs.", expert: "Tokenizer rules add model-specific IDs, boundaries, and request metadata." },
-  { id: "prefill", title: "Prefill processes the prompt", beginner: "The GPU reads the prompt positions and creates attention state.", expert: "Layer kernels compute activations and write initial keys and values into allocated KV blocks." },
-  { id: "gpu", title: "The view enters the GPU", beginner: "Model operations are dispatched to GPU compute and memory.", expert: "Command streams order kernels and dependencies while tensors reside across HBM and cache." },
-  { id: "kernel", title: "A kernel is launched", beginner: "A grid of thread blocks is submitted for execution.", expert: "Launch dimensions and resource usage determine which blocks can become resident on SMs." },
-  { id: "warps", title: "Warps execute instructions", beginner: "Schedulers select ready groups of threads.", expert: "Scoreboards, operands, dependencies, and functional-unit availability determine warp eligibility." },
-  { id: "memory", title: "Memory supplies operands", beginner: "The memory hierarchy feeds data to the executing threads.", expert: "Coalescing, cache hits, shared-memory use, and HBM bandwidth shape the service time." },
-  { id: "decode", title: "Decode predicts a token", beginner: "The model selects one next token and updates its cache.", expert: "Decode kernels read weights and KV state, produce logits, sample, append KV, and reschedule." },
-  { id: "stream", title: "The token is streamed", beginner: "The token becomes text and appears in the response.", expert: "Detokenization and stop rules convert generated IDs into incremental response events." },
+  { id: "artifact", title: titles[0], beginner: "Training has already produced a versioned model artifact.", expert: "The checkpoint, configuration, tokenizer, tensor layout, and manifest identify one immutable version." },
+  { id: "load", title: titles[1], beginner: "The worker copies model weight shards into GPU high-bandwidth memory.", expert: "Verified shards move through node cache and pinned host memory into assigned HBM regions." },
+  { id: "ready", title: titles[2], beginner: "Memory pools, kernels, and health checks pass; request admission opens.", expert: "Ranks join communicators, reserve KV blocks, initialize execution paths, warm representative shapes, and publish readiness." },
+  { id: "admit", title: titles[3], beginner: "The prompt “How do GPUs work?” is authenticated, routed, and admitted.", expert: "Admission selects this warm worker using capacity, latency budget, and cache locality." },
+  { id: "tokenize", title: titles[4], beginner: "The tokenizer converts the prompt into model-specific token IDs.", expert: "The request now owns input IDs, boundaries, and generation settings." },
+  { id: "prefill", title: titles[5], beginner: "Prefill launches GPU kernels over all prompt positions and begins the KV cache.", expert: "Blocks are admitted to SMs; eligible warps issue compute and memory instructions for layer kernels." },
+  { id: "logits", title: titles[6], beginner: "Prompt attention state is cached and the model produces its first next-token distribution.", expert: "Per-layer key/value blocks are resident; final-layer logits reach the decoding policy." },
+  { id: "sample", title: titles[7], beginner: "The decoding policy selects the first output token: “GPUs”.", expert: "Temperature and other decoding constraints transform logits before token ID 48012 is selected." },
+  { id: "first-stream", title: titles[8], beginner: "The first token becomes visible text. This is time to first token.", expert: "Detokenization emits the first response event while the sequence returns to decode." },
+  { id: "decode", title: titles[9], beginner: "Decode repeatedly launches kernels, reads weights and KV state, and appends one new cache position.", expert: "Each iteration schedules decode kernels, memory service, logits, sampling, KV append, and rescheduling." },
+  { id: "grow", title: titles[10], beginner: "More tokens stream while the same resident model weights are reused.", expert: "Inter-token latency is measured between incremental response events; cancellation and stop checks run every iteration." },
+  { id: "complete", title: titles[11], beginner: "The response is complete, request resources are released, and the worker remains ready.", expert: "The stop condition closes the stream, frees request KV blocks, records completion, and returns capacity to admission." },
 ];
 
-const systemLabels = [
-  "Learned weights", "Model artifact", "Ready worker", "Admitted request",
-  "Input tokens", "Prefill", "GPU runtime", "Kernel launch", "Execution",
-  "Memory service", "Decode loop", "Streamed text",
-] as const;
+const promptTokens = ["How", "do", "GPUs", "work", "?"] as const;
+const responseTokens = ["GPUs", "run", "many", "calculations", "in", "parallel", "."] as const;
 
-const gpuLabels = [
-  "Checkpoint tensors", "Weight shards", "HBM placement", "Work queue",
-  "Input buffers", "Prefill kernels", "Command stream", "Grid → blocks",
-  "Warp schedulers", "Cache → HBM", "Decode kernels", "Output buffer",
-] as const;
+function outputCountFor(stage: number): number {
+  if (stage < 8) return 0;
+  if (stage === 8) return 1;
+  if (stage === 9) return 3;
+  if (stage === 10) return 6;
+  return responseTokens.length;
+}
+
+function SystemReplayScene({ stage }: { stage: number }) {
+  const outputCount = outputCountFor(stage);
+  const requestState = stage < 3 ? "not submitted" : stage === 3 ? "admitted" : stage === 4 ? "tokenized" : stage < 11 ? "running" : "complete";
+  const workerState = stage === 0 ? "cold" : stage === 1 ? "loading" : stage < 5 ? "ready" : stage < 11 ? "busy" : "ready";
+  return (
+    <div className="replay-system-scene">
+      <div className={`replay-system-node ${stage >= 3 ? "is-past" : ""}`}><span>Client</span><strong>How do GPUs work?</strong></div>
+      <i>→</i>
+      <div className={`replay-system-node ${stage === 3 || stage === 4 ? "is-active" : stage > 4 ? "is-past" : ""}`}><span>Gateway + scheduler</span><strong>{requestState}</strong></div>
+      <i>→</i>
+      <div className={`replay-system-node ${stage >= 1 && stage <= 10 ? "is-active" : stage === 11 ? "is-past" : ""}`}><span>Model worker</span><strong>{workerState}</strong><small>{stage < 1 ? "artifact available" : stage === 1 ? "copying weights" : "model v42"}</small></div>
+      <i>→</i>
+      <div className={`replay-system-node ${stage >= 5 && stage <= 10 ? "is-active" : ""}`}><span>GPU</span><strong>{stage < 5 ? "ready" : stage <= 6 ? "prefill" : stage <= 10 ? "decode loop" : "ready"}</strong></div>
+      <div className="replay-response">
+        <span>Streamed response</span>
+        <p>{outputCount ? responseTokens.slice(0, outputCount).join(" ").replace(" .", ".") : <em>No output token yet</em>}</p>
+        <strong>{stage === 11 ? "Complete ✓" : outputCount ? `${outputCount} tokens visible` : "waiting"}</strong>
+      </div>
+    </div>
+  );
+}
+
+function GpuReplayScene({ stage, expert }: { stage: number; expert: boolean }) {
+  const outputCount = outputCountFor(stage);
+  const kvCount = stage < 6 ? 0 : promptTokens.length + outputCount;
+  const kernel = stage < 5 ? "none" : stage === 5 ? "prefill attention / GEMM" : stage <= 8 ? "logits + sampling" : stage <= 10 ? "decode attention / GEMM" : "none";
+  const gpuActive = stage === 1 || (stage >= 5 && stage <= 10);
+  return (
+    <div className="replay-gpu-scene">
+      <div className="replay-gpu-status">
+        <div><span>Weights in HBM</span><strong>{stage < 1 ? "0%" : stage === 1 ? "loading shards" : "100% · reused"}</strong></div>
+        <div><span>Command stream</span><strong>{gpuActive ? "work enqueued" : "idle / ready"}</strong></div>
+        <div><span>Current kernel</span><strong>{kernel}</strong></div>
+      </div>
+      <div className={`replay-gpu-work ${gpuActive ? "is-active" : ""}`}>
+        <div><span>Representative grid</span>{Array.from({ length: 8 }, (_, index) => <i className={gpuActive && index < 6 ? "is-live" : ""} key={index}>B{index}</i>)}</div>
+        <div><span>Selected block → warps</span>{Array.from({ length: 4 }, (_, index) => <i className={gpuActive && index < 2 ? "is-live" : ""} key={index}>W{index}</i>)}</div>
+        <div><span>Issue + memory</span><strong>{stage === 5 || stage === 9 ? "scheduler → tensor / LD-ST → cache / HBM" : gpuActive ? "dependent GPU work" : "no active kernel"}</strong></div>
+      </div>
+      <div className="replay-gpu-cache">
+        <span>KV-cache positions</span>
+        <div>{Array.from({ length: 12 }, (_, index) => <i className={index < kvCount ? index < promptTokens.length ? "is-prompt" : "is-output" : ""} key={index}>{index < kvCount ? index + 1 : ""}</i>)}</div>
+        <strong>{kvCount ? `${promptTokens.length} prompt + ${Math.max(0, kvCount - promptTokens.length)} output positions` : "not allocated for this request"}</strong>
+      </div>
+      {expert ? <p className="replay-gpu-expert">Prefill and each decode iteration reuse fixed weights while activation shapes, KV positions, eligible warps, and memory traffic change.</p> : null}
+    </div>
+  );
+}
 
 export function FinalReplayAnimation({
   view = "system",
@@ -53,46 +100,29 @@ export function FinalReplayAnimation({
   });
   const active = playback.currentStep;
   const activeStep = steps[active];
-  const labels = view === "system" ? systemLabels : gpuLabels;
+
   return (
-    <section className="replay-console" data-animation-id="animation.replay.one-prompt">
+    <section className="replay-console replay-console--v2" data-animation-id="animation.replay.one-prompt">
       <header>
         <div>
-          <p>{props.mode === "expert" ? "Expert replay" : "Beginner replay"}</p>
+          <p>{props.mode === "expert" ? "Expert replay" : "Core replay"}</p>
           <h3>{view === "system" ? "One prompt: system view" : "One prompt: GPU view"}</h3>
         </div>
-        <span>one timeline · two zoom levels</span>
+        <span>one scenario · two synchronized views</span>
       </header>
-      <div className="replay-console__rail" role="img" aria-label={`Stage ${active + 1}: ${activeStep.title}. ${activeStep.beginner}`}>
-        {labels.map((label, index) => (
-          <button
-            type="button"
-            className={index < active ? "is-past" : index === active ? "is-active" : ""}
-            onClick={() => props.onStepChange?.(index)}
-            key={label}
-          >
+      <div className="replay-console__rail" aria-label={`Stage ${active + 1}: ${activeStep.title}`}>
+        {steps.map((item, index) => (
+          <button type="button" aria-current={index === active ? "step" : undefined} className={index < active ? "is-past" : index === active ? "is-active" : ""} onClick={() => props.onStepChange?.(index)} key={item.id}>
             <span>{String(index + 1).padStart(2, "0")}</span>
-            <strong>{label}</strong>
+            <strong>{item.title}</strong>
           </button>
         ))}
       </div>
-      <div className="replay-console__scene">
-        <div className="replay-scene__model">
-          <span>Model state</span>
-          <div>{Array.from({ length: 12 }, (_, index) => <i className={index <= active ? "is-live" : ""} key={index} />)}</div>
-          <strong>{active < 2 ? "being created" : active < 6 ? "resident and reused" : "feeding GPU work"}</strong>
-        </div>
-        <div className="replay-scene__request">
-          <span>Request state</span>
-          <div className="token-ribbon">{["How", "do", "GPUs", "work", "?"].map((token, index) => <i className={active >= 4 && index <= active - 4 ? "is-live" : ""} key={token}>{token}</i>)}</div>
-          <strong>{active < 3 ? "not admitted" : active < 10 ? "in flight" : "generating output"}</strong>
-        </div>
-        <div className="replay-scene__gpu">
-          <span>GPU state</span>
-          <div>{Array.from({ length: 32 }, (_, index) => <i className={active >= 5 && index < Math.min(32, (active - 4) * 6) ? "is-live" : ""} key={index} />)}</div>
-          <strong>{active < 5 ? "idle / ready" : active < 10 ? "kernels and warps active" : "decode iteration"}</strong>
-        </div>
+      <div className="replay-scenario">
+        <div><span>Prompt</span><strong>How do GPUs work?</strong></div>
+        <div><span>Illustrative response</span><strong>{responseTokens.join(" ").replace(" .", ".")}</strong></div>
       </div>
+      {view === "system" ? <SystemReplayScene stage={active} /> : <GpuReplayScene stage={active} expert={props.mode === "expert"} />}
       <div className="replay-console__explanation" aria-live="polite">
         <div><span>Stage {active + 1} of {steps.length}</span><strong>{activeStep.title}</strong></div>
         <p>{activeStep.beginner}</p>

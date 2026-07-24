@@ -8,6 +8,7 @@ import {
   sourcesForChapter,
   validateAcademy,
 } from "@/src/content";
+import { animationStageLabels } from "@/src/content/animation-stages";
 import { layersForMode } from "@/src/domain";
 import { animationComponents } from "@/app/components/AcademyApp";
 import {
@@ -100,15 +101,27 @@ describe("academy catalog", () => {
     );
   });
 
-  it("keeps the orientation map and final replay on the same twelve-stage spine", () => {
+  it("keeps a three-part orientation and a twelve-stage end-to-end replay", () => {
     const overview = animationDefinitions.find(
       (animation) => animation.id === "animation.model-factory.weights-map",
     );
     const replay = animationDefinitions.find(
       (animation) => animation.id === "animation.replay.one-prompt",
     );
-    expect(overview?.stages).toHaveLength(12);
+    expect(overview?.stages).toHaveLength(3);
     expect(replay?.stages).toHaveLength(12);
+  });
+
+  it("uses the canonical stage contract for every animation", () => {
+    for (const definition of animationDefinitions) {
+      const labels =
+        animationStageLabels[definition.id as keyof typeof animationStageLabels];
+      expect(labels, `${definition.id} has no canonical stage labels`).toBeDefined();
+      expect(
+        definition.stages.map((stage) => stage.title),
+        `${definition.id} drifted from its rendered stages`,
+      ).toEqual([...labels]);
+    }
   });
 });
 
@@ -214,7 +227,7 @@ describe("browser-local learning state", () => {
     ]);
     expect(
       parsed.animationStates["animation.inside-gpu.warp-scheduler"]?.stageIndex,
-    ).toBe(3);
+    ).toBe(5);
     expect(
       parsed.animationStates["animation.inside-gpu.warp-scheduler"]?.inputs,
     ).toEqual({ lane: 7 });

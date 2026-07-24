@@ -17,6 +17,11 @@ learn how good support answers are structured, learn that admitting uncertainty
 is preferable to inventing a policy, and finally pass policy, safety, and
 quality gates before release.
 
+Preference training is the broad stage; reinforcement learning is one possible
+method inside it. RLHF trains a reward model from human comparisons and then
+uses reinforcement learning to improve the answering model. DPO uses preference
+pairs more directly without a separate reward-model-and-RL loop.
+
 <InteractionSlot animationId="animation.model-factory.pipeline-stages" />
 
 Pretraining usually dominates compute, but post-training often determines much
@@ -70,6 +75,11 @@ model’s blind spots.
 Supervised examples show what an answer looks like. Preference data compares
 alternatives and teaches what “better” means. Feedback is a proxy, not truth:
 raters may reward confidence, agreeableness, or style instead of correctness.
+
+The human rater does not choose between “Model A” and “Model B.” The answering
+model produces two candidate responses to the same prompt. The rater uses an
+explicit rubric to record which candidate is preferable. Many such labelled
+pairs become the training data for a judge or for direct preference training.
 
 <InteractionSlot animationId="animation.model-factory.preference-trainer" />
 

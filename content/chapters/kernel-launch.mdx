@@ -1,8 +1,21 @@
+## What is a GPU kernel?
+
+A GPU kernel is a small program applied to many data elements in parallel. For
+vector addition, every thread runs the same rule—`C[i] = A[i] + B[i]`—but
+computes a different index `i`. The kernel is the program; the launch describes
+how much parallel work to create.
+
+A normal model operation may invoke one kernel, several kernels, or a fused
+kernel. Matrix multiplication, attention, normalization, activation, and
+sampling all become accelerator work. Libraries may supply precompiled
+implementations, while compilers such as Triton or graph compilers may generate
+or fuse specialized kernels. This translation is normally prepared ahead of a
+request or during warmup; it is not rewritten from scratch for every token.
+
 ## From a model operation to thread work
 
-Framework operations eventually dispatch GPU kernels. A launch specifies a
-grid made of thread blocks plus arguments, stream ordering, and block
-dimensions.
+On NVIDIA hardware, a launch specifies a grid made of thread blocks plus
+arguments, stream ordering, and block dimensions.
 
 Hardware assigns complete blocks to SMs when registers, shared memory, thread
 slots, and block slots are available. Threads in each block are partitioned
@@ -12,6 +25,24 @@ The CPU launch can be asynchronous. A later dependency or synchronization
 boundary determines when another operation must wait for its results.
 
 <InteractionSlot animationId="animation.inside-gpu.kernel-launch" />
+
+## The portable stack and vendor-specific implementations
+
+The portable idea is:
+
+`Model or framework → operator/compiler → accelerator runtime → device driver → accelerator`
+
+The concrete names differ:
+
+- **NVIDIA GPU:** CUDA libraries/runtime, NVIDIA driver, and NVIDIA GPU.
+- **AMD GPU:** ROCm/HIP libraries/runtime, AMD driver, and AMD GPU.
+- **Intel GPU:** oneAPI/SYCL or Level Zero and Intel GPU.
+- **Google TPU:** XLA/PJRT and the TPU runtime; it does not use CUDA's
+  grid/block/warp model in exactly the same way.
+
+Google Cloud also offers NVIDIA GPU machines; those still use CUDA. Google’s
+own accelerator is the TPU. The rest of this chapter uses NVIDIA/CUDA as a
+concrete example while identifying which concepts are portable.
 
 <ExpertOnly>
 

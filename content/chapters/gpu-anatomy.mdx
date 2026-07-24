@@ -16,8 +16,15 @@ An SM contains warp schedulers, execution pipelines, registers, and shared
 memory. Many warps can remain resident so the scheduler has other eligible work
 when one warp waits on a dependency or memory.
 
-Exact unit counts vary by GPU generation. The durable mental model is the
-device-to-SM-to-warp-to-execution-unit hierarchy.
+Two hierarchies meet inside the GPU. The hardware hierarchy is GPU → SM →
+scheduler → execution and memory pipelines. The work hierarchy is kernel grid
+→ block → threads → warps. Hardware admits a complete block to one SM, groups
+its threads into warps, and lets a scheduler choose eligible warps for
+instruction issue. Blocks and warps are assigned work, not permanent physical
+layers.
+
+Exact unit counts vary by GPU generation. The durable mental model is how the
+work hierarchy maps onto the hardware hierarchy.
 
 <InteractionSlot animationId="animation.inside-gpu.zoom-anatomy" />
 

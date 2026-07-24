@@ -4,11 +4,15 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { KernelLaunchAnimation } from "@/app/components/animations";
 import {
+  CoalescingLab,
   DivergenceSimulator,
+  GridLaunchExplorer,
   InferenceRuntimeLab,
   LoRALab,
   ParameterBuilderLab,
   PreferenceTrainerLab,
+  RequestArrivalLab,
+  SchedulerTraceLab,
   TokenPredictorLab,
 } from "@/app/components/animations";
 import { FinalReplayExperience } from "@/app/components/FinalReplayExperience";
@@ -91,22 +95,57 @@ describe("deterministic animation controls", () => {
       [];
     const { rerender } = render(
       <PreferenceTrainerLab
+        step={1}
         onInputChange={(key, value) =>
           preferenceChanges.push([key, value])
         }
       />,
     );
-    fireEvent.click(screen.getByText("Answer A").closest("button")!);
+    fireEvent.click(screen.getByText("Candidate A").closest("button")!);
     expect(preferenceChanges[0]?.[0]).toBe("pick-0");
 
-    rerender(<InferenceRuntimeLab inputs={{ concurrency: 8 }} />);
-    expect(screen.getByText("4608 MB")).toBeInTheDocument();
-    expect(screen.getByText(/Requests wait/)).toBeInTheDocument();
+    rerender(<InferenceRuntimeLab step={8} inputs={{ concurrency: 8 }} />);
+    expect(screen.getByText("GPUs run many calculations in parallel.")).toBeInTheDocument();
+    expect(screen.getByText("Complete ✓")).toBeInTheDocument();
 
     rerender(
       <DivergenceSimulator inputs={{ split: 16, pathA: 5, pathB: 8 }} />,
     );
     expect(screen.getAllByText("13").length).toBeGreaterThan(0);
-    expect(screen.getByText(/Paths serialize/)).toBeInTheDocument();
+    expect(screen.getByText(/Both paths issue serially/)).toBeInTheDocument();
+  });
+
+  it("makes formerly unreachable serving and GPU stages selectable", () => {
+    const requestSteps: number[] = [];
+    const { rerender } = render(
+      <RequestArrivalLab onStepChange={(step) => requestSteps.push(step)} />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "05 Batch" }));
+    expect(requestSteps).toEqual([4]);
+
+    rerender(<SchedulerTraceLab step={5} />);
+    expect(screen.getAllByText("Warp 0 becomes eligible and resumes.")).toHaveLength(2);
+
+    rerender(<GridLaunchExplorer step={9} />);
+    expect(screen.getByText(/result C ready/)).toBeInTheDocument();
+
+    rerender(<CoalescingLab step={4} inputs={{ pattern: "tiled" }} />);
+    expect(screen.getByText(/One coalesced HBM fill/)).toBeInTheDocument();
+  });
+
+  it("shows the final response and distinct system and GPU replay evidence", () => {
+    render(
+      <FinalReplayExperience
+        mode="beginner"
+        step={11}
+        onStepChange={() => undefined}
+        onNavigateChapter={() => undefined}
+      />,
+    );
+    expect(screen.getAllByText("GPUs run many calculations in parallel.")).toHaveLength(2);
+    expect(screen.getByText("Complete ✓")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "GPU view" }));
+    expect(screen.getByText("Weights in HBM")).toBeInTheDocument();
+    expect(screen.getByText("KV-cache positions")).toBeInTheDocument();
   });
 });

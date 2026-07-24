@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { journeyStages } from "@/src/content/journey";
+import { animationStageLabels } from "@/src/content/animation-stages";
 import type { DeterministicAnimationProps } from "./types";
 
 export function LabFrame({
@@ -22,7 +22,7 @@ export function LabFrame({
           <p>{eyebrow}</p>
           <h3>{title}</h3>
         </div>
-        <span>interactive model console</span>
+        <span>interactive explanation</span>
       </header>
       <p className="instrument-lab__description">{description}</p>
       {children}
@@ -124,39 +124,61 @@ export function JourneyMapLab({
   step = 0,
   onStepChange,
 }: DeterministicAnimationProps) {
-  const active = Math.min(step, journeyStages.length - 1);
-  const stage = journeyStages[active];
+  const parts = [
+    {
+      name: "Model Factory",
+      promise: "Build or adapt the model",
+      concepts: ["What weights carry", "How training changes them", "How the artifact is packaged"],
+      connection: "Produces the reusable model artifact.",
+      expert: "Data, loss, optimization, post-training, evaluation, and versioned tensors.",
+    },
+    {
+      name: "Inference System",
+      promise: "Turn a prompt into tokens",
+      concepts: ["Ready the worker", "Admit and tokenize a request", "Prefill and repeat decode"],
+      connection: "Uses the same resident weights for many requests.",
+      expert: "Placement, batching, KV allocation, latency, replicas, and cooperative parallelism.",
+    },
+    {
+      name: "Inside the GPU",
+      promise: "See how calculations execute",
+      concepts: ["Launch kernels", "Schedule blocks and warps", "Move operands through memory"],
+      connection: "This work happens inside prefill and every decode iteration.",
+      expert: "Streams, grids, residency, eligibility, execution pipelines, coalescing, and HBM.",
+    },
+  ] as const;
+  const active = Math.min(step, parts.length - 1);
+  const part = parts[active];
   return (
     <LabFrame
-      eyebrow="Unified academy · Golden journey"
-      title="Orient yourself across the complete weights-to-token journey"
-      description="This is a three-level map: build the model, ready the inference system, then run one token-producing request. Select a stage to see which level owns it."
+      eyebrow="Course orientation"
+      title="Three connected views of one token-producing system"
+      description="Begin with the model, follow one inference request, then zoom inside the GPU work that prefill and decode repeatedly invoke."
     >
-      <div className="journey-map">
-        {journeyStages.map(({ label, level }, index) => (
+      <Tabs labels={animationStageLabels["animation.model-factory.weights-map"]} active={active} onChange={(index) => onStepChange?.(index)} />
+      <div className="journey-parts" aria-label="Three course parts">
+        {parts.map((item, index) => (
           <button
             type="button"
             className={index < active ? "is-past" : index === active ? "is-active" : ""}
-            data-level={level.toLowerCase()}
-            key={label}
+            key={item.name}
             onClick={() => onStepChange?.(index)}
           >
             <span>{String(index + 1).padStart(2, "0")}</span>
-            <strong>{label}</strong>
-            <small>{level}</small>
+            <strong>{item.name}</strong>
+            <small>{item.promise}</small>
           </button>
         ))}
       </div>
-      <div className="journey-focus">
-        <div><span>Current stage</span><strong>{stage.label}</strong></div>
-        <div><span>Zoom level</span><strong>{stage.level}</strong></div>
-        <p>{stage.beginner}</p>
+      <div className="journey-part-detail">
+        <div>
+          <span>Part {active + 1}</span>
+          <strong>{part.name}</strong>
+          <p>{part.connection}</p>
+        </div>
+        <ol>{part.concepts.map((concept) => <li key={concept}>{concept}</li>)}</ol>
         {mode === "expert" ? (
-          <div className="journey-focus__expert">
-            <p><strong>Mechanism</strong>{stage.expert}</p>
-            <p><strong>Failure gate</strong>{stage.failure}</p>
-            <i>Canonical replay stage {active + 1} of {journeyStages.length}; changing zoom never changes this position.</i>
-          </div>
+          <aside><span>Expert layer</span><p>{part.expert}</p></aside>
         ) : null}
       </div>
     </LabFrame>
@@ -195,7 +217,7 @@ export function TokenPredictorLab({
 
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · Token Predictor"
+      eyebrow="Next-token prediction"
       title="Watch a next-token distribution change"
       description="A model does not retrieve an answer. It recomputes a distribution over possible next tokens at every position."
     >
@@ -233,7 +255,7 @@ export function TokenPredictorLab({
             <div className="distribution__row" key={token}>
               <span>{token}</span>
               <i>
-                <b style={{ width: `${probability * 100}%` }} />
+                <b style={{ width: `${(probability * 100).toFixed(5)}%` }} />
               </i>
               <strong>{(probability * 100).toFixed(1)}%</strong>
             </div>
@@ -260,7 +282,7 @@ export function PipelineStagesLab({
   const stage = PIPELINE[active];
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · Pipeline Stages"
+      eyebrow="How a model gets built"
       title="See where model-building compute really goes"
       description="The word training hides stages that differ by orders of magnitude in cost and by the kind of value they create."
     >
@@ -303,13 +325,17 @@ export function PipelineStagesLab({
 
 export function ParameterBuilderLab({
   mode = "beginner",
+  step = 0,
+  onStepChange,
   inputs,
   onInputChange,
 }: DeterministicAnimationProps) {
+  const active = Math.min(step, 2);
   const layers = numeric(inputs, "layers", 32);
   const width = numeric(inputs, "width", 4096);
   const vocabulary = numeric(inputs, "vocabulary", 128000);
   const multiplier = numeric(inputs, "ffn", 4);
+  const precision = numeric(inputs, "precision", 16);
   const embeddings = vocabulary * width;
   const attention = layers * 4 * width * width;
   const feedForward = layers * 2 * multiplier * width * width;
@@ -318,24 +344,54 @@ export function ParameterBuilderLab({
 
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · Parameter Builder"
+      eyebrow="Parameter and memory budget"
       title="Build a transformer and watch width bite"
       description="Depth grows parameter count linearly. Width appears inside square matrices, so a modest increase changes memory far faster."
     >
+      <Tabs
+        labels={animationStageLabels["animation.model-factory.parameter-builder"]}
+        active={active}
+        onChange={(index) => onStepChange?.(index)}
+      />
+      <div className="stage-narration">
+        <span>Stage {active + 1}</span>
+        <strong>{animationStageLabels["animation.model-factory.parameter-builder"][active]}</strong>
+        <p>
+          {active === 0
+            ? "Choose layer count, hidden width, vocabulary size, and feed-forward expansion. These dimensions define the shapes of the learned tensors."
+            : active === 1
+              ? "Compare where parameters live. Width is squared inside attention and feed-forward matrices, so these groups dominate many dense models."
+              : `Store the same ${billions.toFixed(2)} billion learned values at ${precision} bits each. Lower precision reduces weight memory but may require calibration or quantization-aware handling.`}
+        </p>
+      </div>
       <div className="lab-grid">
         <div className="slider-stack">
-          <Slider label="Layers" value={layers} min={8} max={96} step={4} onChange={(value) => onInputChange?.("layers", value)} />
-          <Slider label="Width" value={width} min={1024} max={12288} step={512} onChange={(value) => onInputChange?.("width", value)} />
-          <Slider label="Vocabulary" value={vocabulary} min={32000} max={256000} step={8000} onChange={(value) => onInputChange?.("vocabulary", value)} />
-          <Slider label="FFN multiplier" value={multiplier} min={2} max={8} onChange={(value) => onInputChange?.("ffn", value)} />
+          {active === 0 ? (
+            <>
+              <Slider label="Layers" value={layers} min={8} max={96} step={4} onChange={(value) => onInputChange?.("layers", value)} />
+              <Slider label="Width" value={width} min={1024} max={12288} step={512} onChange={(value) => onInputChange?.("width", value)} />
+              <Slider label="Vocabulary" value={vocabulary} min={32000} max={256000} step={8000} onChange={(value) => onInputChange?.("vocabulary", value)} />
+              <Slider label="FFN multiplier" value={multiplier} min={2} max={8} onChange={(value) => onInputChange?.("ffn", value)} />
+            </>
+          ) : active === 1 ? (
+            <p className="lab-guidance">Read each bar as its share of the total parameter count. Change the architecture in Stage 1, then return here to see the new split.</p>
+          ) : (
+            <div className="pattern-picker" role="group" aria-label="Weight precision">
+              {[16, 8, 4].map((bits) => (
+                <button type="button" className={precision === bits ? "is-active" : ""} aria-pressed={precision === bits} onClick={() => onInputChange?.("precision", bits)} key={bits}>
+                  {bits}-bit weights
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div>
-          <div className="parameter-total">
+          <div className={`parameter-total parameter-total--stage-${active}`}>
             <span>Approximate dense parameters</span>
             <strong>{billions.toFixed(2)}B</strong>
-            <small>{(billions * 2).toFixed(1)} GB of 16-bit weights</small>
+            <small>{(billions * (precision / 8)).toFixed(1)} GB of {precision}-bit weights</small>
           </div>
-          <div className="parameter-map">
+          <div className={`parameter-map ${active === 1 ? "is-focus" : ""}`}>
             {[
               ["Embeddings", embeddings],
               ["Attention", attention],
@@ -357,14 +413,17 @@ export function ParameterBuilderLab({
   );
 }
 
-const TRAINING_PHASES = [
-  "Load batch",
-  "Forward pass",
-  "Measure loss",
-  "Backpropagate",
-  "All-reduce gradients",
-  "Optimizer step",
-  "Checkpoint",
+const TRAINING_PHASES =
+  animationStageLabels["animation.model-factory.training-loop"];
+
+const TRAINING_WORKER_STATE = [
+  "Receives a different data shard",
+  "Runs the same model on local examples",
+  "Measures a local loss",
+  "Computes local gradients",
+  "Exchanges gradients with every worker",
+  "Applies the same synchronized update",
+  "Contributes consistent state",
 ] as const;
 
 export function TrainingRunLab({
@@ -381,27 +440,41 @@ export function TrainingRunLab({
   const flops = 6 * parameters * 1e9 * tokens * 1e9;
   const effective = gpus * 3.12e14 * (utilization / 100);
   const days = flops / effective / 86400;
-  const cost = days * 24 * gpus * 2.5;
+  const pricePerGpuHour = 2.5;
+  const cost = days * 24 * gpus * pricePerGpuHour;
+  const active = Math.min(step, TRAINING_PHASES.length - 1);
 
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · Training Run"
-      title="Turn model scale into time and money"
-      description="The arithmetic is predictable. Quality is not. Step through the distributed loop and change the assumptions."
+      eyebrow="Distributed training"
+      title="Watch four workers learn one consistent set of weights"
+      description="Each worker sees different examples, computes local gradients, synchronizes them, and applies the same update. A checkpoint is a separate saved artifact."
     >
       <Tabs
         labels={TRAINING_PHASES}
-        active={Math.min(step, TRAINING_PHASES.length - 1)}
+        active={active}
         onChange={(index) => onStepChange?.(index)}
       />
-      <div className="training-rack" aria-label="Training GPU ranks">
-        {Array.from({ length: 16 }, (_, index) => (
-          <i
-            key={index}
-            className={index <= Math.min(step, 6) * 2 ? "is-active" : ""}
-          />
-        ))}
-        <span>{TRAINING_PHASES[Math.min(step, 6)]}</span>
+      <div className={`training-workers training-workers--stage-${active}`}>
+        <div className="training-workers__grid" aria-label="Four representative training workers">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index}>
+              <span>Worker {index + 1}</span>
+              <strong>{TRAINING_WORKER_STATE[active]}</strong>
+              <i>{active < 4 ? `batch ${String.fromCharCode(65 + index)}` : active === 4 ? "gradient ↔" : "weights v42"}</i>
+            </div>
+          ))}
+        </div>
+        {active === 4 ? (
+          <p className="training-workers__collective">All-reduce combines the four local gradients and returns the same result to every worker.</p>
+        ) : null}
+        {active === 6 ? (
+          <div className="checkpoint-artifact">
+            <span>Saved checkpoint</span>
+            <strong>weights v42 + optimizer state + metadata</strong>
+            <small>All four workers continue training; the artifact is stored separately.</small>
+          </div>
+        ) : null}
       </div>
       <div className="lab-grid">
         <div className="slider-stack">
@@ -413,8 +486,13 @@ export function TrainingRunLab({
         <div className="lab-readouts lab-readouts--stack">
           <div><span>Training work</span><strong>{(flops / 1e23).toFixed(1)} × 10²³ FLOPs</strong></div>
           <div><span>Wall-clock estimate</span><strong>{days.toFixed(1)} days</strong></div>
-          <div><span>Accelerator rental</span><strong>${Math.round(cost).toLocaleString()}</strong></div>
-          {mode === "expert" ? <div><span>Estimator</span><strong>C ≈ 6ND / achieved throughput</strong></div> : null}
+          <div><span>Estimated GPU compute cost</span><strong>${Math.round(cost).toLocaleString()}</strong><small>Assumes ${pricePerGpuHour.toFixed(2)} per GPU-hour</small></div>
+          {mode === "expert" ? (
+            <>
+              <div><span>Estimator</span><strong>C ≈ 6ND / achieved throughput</strong></div>
+              <div><span>Not included</span><strong>Storage, networking, CPU hosts, failed runs, and engineering time</strong></div>
+            </>
+          ) : null}
         </div>
       </div>
     </LabFrame>
@@ -446,48 +524,95 @@ export function PreferenceTrainerLab({
   inputs,
   onInputChange,
 }: DeterministicAnimationProps) {
-  const active = Math.min(step, PREFERENCES.length - 1);
-  const item = PREFERENCES[active];
+  const stages = animationStageLabels["animation.model-factory.preference-trainer"];
+  const active = Math.min(step, stages.length - 1);
+  const comparison = Math.min(numeric(inputs, "comparison", 0), PREFERENCES.length - 1);
+  const item = PREFERENCES[comparison];
   const picks = PREFERENCES.map((_, index) => inputs?.[`pick-${index}`]);
+  const answered = picks.filter((pick) => pick === "honest" || pick === "agreeable");
+  const truthSeeking = answered.filter((pick) => pick === "honest").length;
   const agreeable = picks.filter((pick) => pick === "agreeable").length;
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · Preference Trainer"
-      title="Train the judge—and expose its bias"
-      description="Preference data teaches behaviour, but the reward signal inherits what raters consistently choose."
+      eyebrow="Preference training"
+      title="Act as the human rater, then inspect what the judge learns"
+      description="Candidate answers come from the answering model. Your comparison becomes training data for a reward model—the judge—not an automatic statement of truth."
     >
-      <Tabs
-        labels={PREFERENCES.map((_, index) => `Comparison ${index + 1}`)}
-        active={active}
-        onChange={(index) => onStepChange?.(index)}
-      />
-      <p className="preference-prompt">{item.prompt}</p>
-      <div className="preference-grid">
-        {([
-          ["honest", item.honest],
-          ["agreeable", item.agreeable],
-        ] as const).map(([id, text]) => (
-          <button
-            type="button"
-            className={picks[active] === id ? "is-selected" : ""}
-            onClick={() => onInputChange?.(`pick-${active}`, id)}
-            key={id}
-          >
-            <span>{id === "honest" ? "Answer A" : "Answer B"}</span>
-            <p>{text}</p>
-            <strong>Reward this response</strong>
-          </button>
-        ))}
-      </div>
-      <div className="bias-meter">
-        <span>Truth-seeking</span>
-        <i><b style={{ width: `${(agreeable / PREFERENCES.length) * 100}%` }} /></i>
-        <span>Agreeable</span>
-      </div>
+      <Tabs labels={stages} active={active} onChange={(index) => onStepChange?.(index)} />
+      {active === 0 ? (
+        <div className="preference-role">
+          <strong>Your role: human rater</strong>
+          <p>Use the rubric to choose the better candidate response. Prefer evidence, honesty about uncertainty, helpfulness, and safety—not confidence or praise by itself.</p>
+          <span>Answering model → two candidates → your preference</span>
+        </div>
+      ) : null}
+      {active === 1 ? (
+        <>
+          <div className="preference-comparison-switch" aria-label="Preference comparisons">
+            {PREFERENCES.map((_, index) => (
+              <button type="button" className={comparison === index ? "is-active" : ""} onClick={() => onInputChange?.("comparison", index)} key={index}>
+                Comparison {index + 1}{picks[index] ? " ✓" : ""}
+              </button>
+            ))}
+          </div>
+          <p className="preference-prompt"><strong>Prompt:</strong> {item.prompt}</p>
+          <div className="preference-grid">
+            {([
+              ["honest", item.honest],
+              ["agreeable", item.agreeable],
+            ] as const).map(([id, text]) => (
+              <button
+                type="button"
+                className={picks[comparison] === id ? "is-selected" : ""}
+                onClick={() => onInputChange?.(`pick-${comparison}`, id)}
+                key={id}
+              >
+                <span>{id === "honest" ? "Candidate A" : "Candidate B"}</span>
+                <p>{text}</p>
+                <strong>Prefer this response</strong>
+              </button>
+            ))}
+          </div>
+          {picks[comparison] ? (
+            <p className="preference-record">Recorded: Candidate {picks[comparison] === "honest" ? "A" : "B"} preferred. This becomes one labelled comparison.</p>
+          ) : <p className="preference-record">Choose one candidate using the rubric.</p>}
+        </>
+      ) : null}
+      {active === 2 ? (
+        <div className="preference-dataset">
+          <strong>Preference dataset · {answered.length} of {PREFERENCES.length} comparisons recorded</strong>
+          {PREFERENCES.map((preference, index) => (
+            <div key={preference.prompt}>
+              <span>Prompt {index + 1}</span>
+              <b>{picks[index] ? `Candidate ${picks[index] === "honest" ? "A" : "B"} preferred` : "Not rated"}</b>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {active === 3 ? (
+        <div className="judge-flow">
+          <div><span>Human comparisons</span><strong>{answered.length || "No"} labelled pairs</strong></div>
+          <i>→</i>
+          <div><span>Reward model</span><strong>Learns to predict the preferred answer</strong></div>
+          <i>→</i>
+          <div><span>Answering model</span><strong>RLHF uses judge scores to improve responses</strong></div>
+        </div>
+      ) : null}
+      {active === 4 ? (
+        <div className="bias-test">
+          <strong>What tendency would this small dataset teach?</strong>
+          <div className="bias-meter">
+            <span>Truth-seeking {truthSeeking}</span>
+            <i><b style={{ width: `${answered.length ? (agreeable / answered.length) * 100 : 50}%` }} /></i>
+            <span>Agreeable {agreeable}</span>
+          </div>
+          <p>{answered.length === 0 ? "Rate the comparisons first; unanswered items are not counted." : agreeable > truthSeeking ? "The judge risks rewarding reassurance over evidence." : "The current choices favor evidence, but three examples are only a teaching illustration."}</p>
+        </div>
+      ) : null}
       {mode === "expert" ? (
         <p className="lab-formula">
-          A proxy reward is an optimization target, not ground truth. Evaluate
-          reward hacking and sycophancy separately.
+          RLHF: preferences → reward model → policy optimization. DPO: preference
+          pairs train the answering model directly, without a separate RL loop.
         </p>
       ) : null}
     </LabFrame>
@@ -510,22 +635,32 @@ export function WeightsSpectrumLab({
   const active = Math.min(step, RELEASES.length - 1);
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · Weights Spectrum"
+      eyebrow="Model release contents"
       title="Inspect what a model release actually gives you"
       description="Open versus closed is a spectrum of artifacts, rights, operational control, and withheld know-how."
     >
       <Tabs labels={RELEASES.map((item) => item.name)} active={active} onChange={(index) => onStepChange?.(index)} />
-      <div className="release-matrix">
-        <span />
-        {RELEASE_FIELDS.map((field) => <strong key={field}>{field}</strong>)}
-        {RELEASES.map((release, row) => (
-          <div className={row === active ? "is-active" : ""} key={release.name}>
-            <b>{release.name}</b>
-            {release.values.map((value, index) => (
-              <i key={RELEASE_FIELDS[index]}>{value ? "●" : "—"}</i>
+      <div className="release-table-wrap">
+        <table className="release-table">
+          <thead>
+            <tr>
+              <th scope="col">Release type</th>
+              {RELEASE_FIELDS.map((field) => <th scope="col" key={field}>{field}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {RELEASES.map((release, row) => (
+              <tr className={row === active ? "is-active" : ""} key={release.name}>
+                <th scope="row">{release.name}</th>
+                {release.values.map((value, index) => (
+                  <td data-label={RELEASE_FIELDS[index]} key={RELEASE_FIELDS[index]}>
+                    <span className={value ? "is-included" : "is-withheld"}>{value ? "Included" : "Not provided"}</span>
+                  </td>
+                ))}
+              </tr>
             ))}
-          </div>
-        ))}
+          </tbody>
+        </table>
       </div>
       <p className="lab-verdict">{RELEASES[active].note}</p>
       {mode === "expert" ? <p className="lab-formula">Operational ownership: quantization + batching + KV cache + scaling + evaluation</p> : null}
@@ -533,13 +668,8 @@ export function WeightsSpectrumLab({
   );
 }
 
-const LORA_STAGES = [
-  "Full fine-tuning",
-  "Freeze the base",
-  "Insert low-rank pair",
-  "Reconstruct update",
-  "Merge and serve",
-] as const;
+const LORA_STAGES =
+  animationStageLabels["animation.model-factory.adaptation-lab"];
 
 function MatrixArt({ rank, accent = false }: { rank: number; accent?: boolean }) {
   return (
@@ -573,26 +703,39 @@ export function LoRALab({
   const trainable = 32 * 4 * 2 * 4096 * rank;
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · LoRA Lab"
-      title="Freeze billions; train a thin update"
-      description="Step from full fine-tuning to a mergeable low-rank update and inspect how rank changes capacity and memory."
+      eyebrow="Low-rank adaptation"
+      title="Keep the base fixed and learn two thin matrices"
+      description="LoRA does not retrain every value in W. It learns A and B, multiplies them into a full-shaped adjustment, and adds that adjustment to the frozen base."
     >
       <Tabs labels={LORA_STAGES} active={active} onChange={(index) => onStepChange?.(index)} />
-      <div className="lora-stage">
-        <div>
-          <span>Frozen base W</span>
+      <div className={`lora-explainer lora-explainer--stage-${active}`}>
+        <div className="lora-base">
+          <span>{active === 0 ? "Base matrix W · train every value" : "Base matrix W · locked"}</span>
           <MatrixArt rank={32} />
+          <strong>{active === 0 ? "gradients update W" : "🔒 no gradients update W"}</strong>
         </div>
-        <strong>+</strong>
-        <div className={active < 2 ? "is-hidden" : ""}>
-          <span>Update ΔW = B × A</span>
+        <div className={`lora-factors ${active < 2 ? "is-muted" : ""}`}>
+          <div>
+            <span>A · {rank} × 4096</span>
+            <i style={{ "--factor-rank": rank } as CSSProperties}>thin</i>
+          </div>
+          <b>×</b>
+          <div>
+            <span>B · 4096 × {rank}</span>
+            <i style={{ "--factor-rank": rank } as CSSProperties}>thin</i>
+          </div>
+          <strong>{active >= 2 ? "Only A and B receive gradients" : "Inserted after the base is frozen"}</strong>
+        </div>
+        <div className={`lora-delta ${active < 3 ? "is-muted" : ""}`}>
+          <span>Full-shaped adjustment</span>
           <MatrixArt rank={rank} accent />
+          <strong>ΔW = B × A</strong>
         </div>
-        <strong>=</strong>
-        <div className={active < 4 ? "is-muted" : ""}>
-          <span>Merged weights</span>
-          <MatrixArt rank={32} />
-        </div>
+      </div>
+      <div className="lora-equation" aria-live="polite">
+        <span>Effective weights</span>
+        <strong>{active < 3 ? "W" : active === 3 ? "W + scale × ΔW" : "W′ = W + scale × (B × A)"}</strong>
+        <p>{active === 4 ? "Serve with the adapter attached, or merge the adjustment into a derived copy of W." : active === 0 ? "Full fine-tuning changes the complete base matrix." : "The original base remains unchanged and reusable."}</p>
       </div>
       <div className="lab-grid">
         <div className="slider-stack">
@@ -603,10 +746,15 @@ export function LoRALab({
           </label>
         </div>
         <div className="lab-readouts lab-readouts--stack">
-          <div><span>Trainable parameters</span><strong>{(trainable / 1e6).toFixed(1)}M</strong></div>
-          <div><span>Share of 7B model</span><strong>{((trainable / 7e9) * 100).toFixed(3)}%</strong></div>
+          <div><span>Trainable parameters</span><strong>{active === 0 ? "≈ 7,000M" : `${(trainable / 1e6).toFixed(1)}M`}</strong></div>
+          <div><span>Share of 7B model</span><strong>{active === 0 ? "100%" : `${((trainable / 7e9) * 100).toFixed(3)}%`}</strong></div>
           <div><span>Base storage</span><strong>{quantized ? "3.5 GB" : "14 GB"}</strong></div>
-          {mode === "expert" ? <div><span>Inference overhead after merge</span><strong>None</strong></div> : null}
+          {mode === "expert" ? (
+            <>
+              <div><span>Why rank matters</span><strong>Higher rank increases adapter capacity and trainable state</strong></div>
+              <div><span>Inference overhead after merge</span><strong>No separate matrix pair remains on the token path</strong></div>
+            </>
+          ) : null}
         </div>
       </div>
     </LabFrame>
@@ -630,7 +778,7 @@ export function FineTuneMethodsLab({
   const method = METHODS[active];
   return (
     <LabFrame
-      eyebrow="Original Academy interaction · Fine-tune Methods"
+      eyebrow="Adaptation method comparison"
       title="See where each adaptation method intervenes"
       description="Compare what moves, what stays frozen, how much state training owns, and what cost remains during inference."
     >

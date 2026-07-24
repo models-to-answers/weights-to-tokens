@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 test("learner can use canonical content, answer, continue, and reload progress", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("What a model carries");
   await page.getByRole("button", { name: "Expert" }).click();
-  await expect(page.getByText("Expert layer")).toBeVisible();
+  await expect(page.getByText("Expert layer").first()).toBeVisible();
   await page.getByRole("tab", { name: "02 Example 2" }).click();
   await expect(page.getByText(/A GPU hides memory latency/)).toBeVisible();
   await page.getByRole("button", { name: /They are repeatedly read/ }).click();
@@ -22,7 +22,7 @@ test("learner can use canonical content, answer, continue, and reload progress",
   await page.reload();
   await page.locator('[data-hydrated="true"]').waitFor();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("How training changes weights");
-  await expect(page.getByText("Expert layer")).toBeVisible();
+  await expect(page.getByText("Expert layer").first()).toBeVisible();
   await expect(page.getByLabel(/complete$/)).toContainText("8%");
   await expect(page.getByLabel(/complete$/)).toContainText("Expert 1/13");
 });
@@ -76,10 +76,14 @@ test("rich labs update and persist their canonical stage and inputs", async ({ p
 
   await page.goto("/learn/warp-scheduler");
   await page.locator('[data-hydrated="true"]').waitFor();
-  await page.getByRole("button", { name: "warp 1 memory" }).click();
+  await page.getByRole("tab", { name: "06 Warp 0 resumes" }).click();
   await page.reload();
   await page.locator('[data-hydrated="true"]').waitFor();
-  await expect(page.getByText("warp 1 is not eligible")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "06 Warp 0 resumes" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByText("Issue: W0 · ADD")).toBeVisible();
 });
 
 test("final replay keeps its stage across system and GPU views and links to a chapter", async ({ page }) => {
@@ -93,7 +97,72 @@ test("final replay keeps its stage across system and GPU views and links to a ch
   await expect(page.getByText("Step 2 of 12")).toBeVisible();
   await expect(page.getByRole("heading", { name: "One prompt: GPU view" })).toBeVisible();
   await page.getByRole("button", { name: /Open source chapter/ }).click();
-  await expect(page).toHaveURL(/\/learn\/model-artifact$/);
+  await expect(page).toHaveURL(/\/learn\/model-readiness$/);
+});
+
+const animationAuditRoutes = [
+  "/learn/weights",
+  "/learn/training-loop",
+  "/learn/adaptation",
+  "/learn/model-artifact",
+  "/learn/request-arrival",
+  "/learn/model-readiness",
+  "/learn/single-gpu-inference",
+  "/learn/multi-gpu-inference",
+  "/learn/gpu-anatomy",
+  "/learn/kernel-launch",
+  "/learn/warp-scheduler",
+  "/learn/memory-hierarchy",
+] as const;
+
+test("every chapter animation can be played through in Beginner and Expert", async ({ page }) => {
+  test.setTimeout(120_000);
+  for (const mode of ["Beginner", "Expert"] as const) {
+    for (const route of animationAuditRoutes) {
+      await page.goto(route);
+      await page.locator('[data-hydrated="true"]').waitFor();
+      await page.getByRole("button", { name: mode }).click();
+      const labs = page.locator("section.animation-stage[data-animation-id]");
+      const labCount = await labs.count();
+      expect(labCount, `${route} should render at least one animation`).toBeGreaterThan(0);
+
+      for (let labIndex = 0; labIndex < labCount; labIndex += 1) {
+        const lab = labs.nth(labIndex);
+        await expect(lab).toBeVisible();
+        const stageTabs = lab.getByRole("tab");
+        const stageCount = await stageTabs.count();
+        expect(stageCount, `${route} animation ${labIndex + 1} has no stages`).toBeGreaterThan(0);
+        for (let stageIndex = 0; stageIndex < stageCount; stageIndex += 1) {
+          const stage = stageTabs.nth(stageIndex);
+          await stage.click();
+          await expect(stage).toHaveAttribute("aria-selected", "true");
+          await expect(lab.locator(".instrument-lab")).toBeVisible();
+        }
+      }
+    }
+  }
+});
+
+test("final replay plays every stage in both modes and both synchronized views", async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto("/replay");
+  await page.locator('[data-hydrated="true"]').waitFor();
+  for (const mode of ["Beginner", "Expert"] as const) {
+    await page.getByRole("button", { name: mode }).click();
+    for (const view of ["System view", "GPU view"] as const) {
+      await page.getByRole("button", { name: view }).click();
+      const rail = page.locator(".replay-console__rail");
+      const stages = rail.getByRole("button");
+      await expect(stages).toHaveCount(12);
+      for (let index = 0; index < 12; index += 1) {
+        await stages.nth(index).click();
+        await expect(stages.nth(index)).toHaveAttribute("aria-current", "step");
+      }
+    }
+  }
+  await page.getByRole("button", { name: "System view" }).click();
+  await expect(page.getByText("GPUs run many calculations in parallel.").last()).toBeVisible();
+  await expect(page.getByText("Complete ✓")).toBeVisible();
 });
 
 test("Core and Expert replay completion require the full twelve-stage journey", async ({ page }) => {

@@ -9,11 +9,11 @@ reviewed. The user approved the repository, architecture, source-migration,
 runtime, testing, visual-system, golden-journey, and milestone decisions now
 captured in `docs/decisions.md`.
 
-The first-release implementation is a validated migration-integrity release
-candidate. A
-previous “complete” claim was withdrawn after user review exposed material
-source-coverage and animation-depth gaps. The release contract is now the
-one-to-one matrix plus `docs/curriculum-audit.md`.
+The first-release implementation is a corrected, browser-audited release
+candidate. A previous “complete” claim was withdrawn after user review exposed
+material source-coverage and animation-depth gaps. The release contract is now
+the one-to-one matrix, `docs/curriculum-audit.md`, and the acceptance checklist
+in `docs/review-correction-plan.md`.
 
 ## Milestone map
 
@@ -82,6 +82,24 @@ milestone's acceptance evidence has not been recorded here.
   clarified the journey overview, and aligned its runtime with all twelve
   displayed stages.
 - Added the evidence-based reconciliation in `docs/curriculum-audit.md`.
+- Rebuilt all 23 animation stage contracts from one canonical registry so that
+  every visible tab is reachable and persisted state clamps to the same count.
+- Replaced decorative or ambiguous state changes with causal explanations:
+  sequential request gates, artifact-to-HBM versus worker readiness, a complete
+  single-GPU response, strategy-specific multi-GPU communication, CPU/GPU work
+  dependency, eight-level GPU zoom, ten-stage kernel launch, six-cycle warp
+  scheduling, a five-stage memory path, and a scaled roofline.
+- Reframed preference training as a human-rating workflow that records labelled
+  comparisons, trains a judge, distinguishes RLHF from DPO, and exposes bias.
+- Added a complete response and distinct System/GPU evidence to all twelve
+  final-replay stages.
+- Enabled GitHub-flavored Markdown tables and removed learner-visible internal
+  implementation labels.
+- Completed a Chrome playback audit of all 44 chapter animation projections
+  (22 animations in Beginner and Expert), covering 226 stage selections. The
+  audit found and corrected two initially non-communicating stage sequences,
+  plus visual hierarchy gaps in preference training, distributed training,
+  LoRA, GPU anatomy, and final replay.
 
 ## Validation record
 
@@ -91,20 +109,21 @@ Current validation on 2026-07-24:
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run lint` | Passed |
-| `npm run test:unit` | Passed: 2 files, 20 tests |
+| `npm run test:unit` | Passed: 2 files, 23 tests |
 | `npm run build` | Passed |
-| `npm test` | Passed: 20 unit/component tests, production build, 2 rendered-HTML checks |
-| `npm run test:e2e` | Passed: 18 desktop/mobile Chromium journeys |
+| `npm test` | Passed: 23 unit/component tests, production build, 2 rendered-HTML checks |
+| `npm run test:e2e` | Passed: 22 desktop/mobile Chromium journeys |
 | `git diff --check` | Passed |
 
-Browser coverage confirms Expert disclosure, animation stepping, correct answer
+Browser coverage confirms every animation stage in both learning modes, Expert
+disclosure, correct answer
 feedback, immediate local persistence across reload, direct routes, keyboard
 resource tabs, reset, replay zoom continuity, reduced motion, no serious or
 critical automated accessibility violations, and no document-level overflow at
-390×844. Manual visual QA also covered the Model Factory token and parameter
-labs, the synchronized single-GPU runtime, the warp scheduler, and the final
-system/GPU replay. The mobile chapter rail intentionally scrolls inside its own
-navigation region.
+390×844. Manual Chrome QA also covered Model Factory parameter, training,
+preference, and LoRA labs; single-GPU inference; GPU anatomy; kernel launch; and
+the final System/GPU replay. The mobile chapter rail intentionally scrolls
+inside its own navigation region.
 
 ## Next recommended work
 

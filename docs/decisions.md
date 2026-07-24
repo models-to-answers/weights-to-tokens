@@ -198,3 +198,19 @@ Every chapter has a Core check and a distinct Expert challenge. Core completion
 and Expert mastery are persisted separately. Completing Expert directly
 requires both checks and also satisfies Core completion. The final replay also
 records Core and Expert completion separately.
+
+### D-017 — Animation stages have one canonical contract
+
+- **Status:** Approved by implementation acceptance criteria
+- **Date:** 2026-07-24
+
+Every animation ID has one ordered stage-label contract in
+`src/content/animation-stages.ts`. The catalog, persistence clamp, rendered
+controls, replay mapping, and browser audit all consume or validate that
+contract. A component may add sliders or comparison choices, but those inputs
+cannot masquerade as lifecycle stages.
+
+Every canonical stage must be reachable in both Beginner and Expert, visibly
+selected, and communicate a distinct learner-facing state through changed
+evidence or explanation. Browser QA plays every stage in both modes; the final
+replay is additionally checked in both System and GPU views.

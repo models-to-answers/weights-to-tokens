@@ -13,17 +13,19 @@ One useful separation is **control plane versus data plane**. Configuration,
 placement, health, and policy prepare the service. The admitted prompt and its
 generated tokens are the request’s active data path.
 
-This chapter intentionally stops at the inference boundary; it is not a
-packet-networking course.
+This chapter follows the request from the application endpoint through routing,
+admission, tokenization, and batching. The next chapters show how the model is
+loaded and how the admitted request executes on the GPU.
 
 <InteractionSlot animationId="animation.inference-system.request-arrival" />
 
 ## The compute layers underneath the model server
 
-The same inference runtime may sit directly on a Linux host, inside a virtual
-machine, in a Kubernetes pod, or in Kubernetes nodes that are themselves
-virtual machines. Those layers change placement, isolation, health checks, and
-the path to a usable device. They do not change the model's token computation.
+Every deployment retains the same inference core: model artifact, inference
+server, accelerator runtime, device driver, and accelerator. Containers,
+Kubernetes, and virtual machines add placement, isolation, lifecycle, and
+ownership layers around that core. They do not replace it or change the model's
+token computation.
 
 <InteractionSlot animationId="animation.inference-system.compute-platform" />
 

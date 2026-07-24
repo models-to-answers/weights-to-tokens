@@ -608,13 +608,13 @@ function ChapterLesson({
     const saved = savedAnimations[canonicalId];
 
     return (
-      <section className="animation-stage">
+      <section className="animation-stage" data-animation-id={canonicalId}>
         <div className="section-heading">
           <div>
-            <p className="section-label">Interactive model lab</p>
+            <p className="section-label">Interactive explanation</p>
             <h2>{animationRegistry[canonicalId].title}</h2>
           </div>
-          <span className="status-chip">deterministic · source preserved</span>
+          <span className="status-chip">Core + Expert</span>
         </div>
         <Animation
           mode={mode}
@@ -755,7 +755,6 @@ function ChapterLesson({
           aria-labelledby="lesson-tab"
           hidden={detailTab !== "lesson"}
         >
-          <p className="section-label">Core narrative · MDX</p>
           <LessonContent components={{ InteractionSlot, ChapterCheck, ExpertOnly }} />
         </div>
 
