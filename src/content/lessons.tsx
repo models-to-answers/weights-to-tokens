@@ -5,6 +5,7 @@ import WeightsLesson from "../../content/chapters/weights.mdx";
 import TrainingLesson from "../../content/chapters/training-loop.mdx";
 import AdaptationLesson from "../../content/chapters/adaptation.mdx";
 import ArtifactLesson from "../../content/chapters/model-artifact.mdx";
+import BuildModelLesson from "../../content/chapters/build-your-model.mdx";
 import ArrivalLesson from "../../content/chapters/request-arrival.mdx";
 import ReadinessLesson from "../../content/chapters/model-readiness.mdx";
 import SingleGpuLesson from "../../content/chapters/single-gpu-inference.mdx";
@@ -23,6 +24,7 @@ export const lessonComponents: Readonly<Record<ChapterId, LessonComponent>> = {
   "chapter.model-factory.training": TrainingLesson,
   "chapter.model-factory.adaptation": AdaptationLesson,
   "chapter.model-factory.artifact": ArtifactLesson,
+  "chapter.model-factory.builder": BuildModelLesson,
   "chapter.inference-system.arrival": ArrivalLesson,
   "chapter.inference-system.readiness": ReadinessLesson,
   "chapter.inference-system.single-gpu": SingleGpuLesson,

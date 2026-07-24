@@ -1,0 +1,32 @@
+## Make one connected design
+
+This chapter joins the Model Factory decisions into one guided build. You are not ordering hardware or producing a procurement quote. You are creating a coherent design that can be questioned before expensive training begins.
+
+Start with the job. A general assistant needs broad capability. A domain model can be smaller and more focused. An on-device model must fit tight memory, power, and latency limits. Those different purposes should not begin from the same architecture.
+
+## Carry one design through the factory
+
+Use the lab to make six connected decisions:
+
+1. Choose the model's purpose.
+2. Size its layers, width, vocabulary, and weight precision.
+3. Plan a pretraining scale.
+4. Choose how people will shape its behavior.
+5. Decide how the model will be released.
+6. Review the resulting build sheet.
+
+<InteractionSlot animationId="animation.model-factory.model-builder" />
+
+The final sheet is the handoff to inference. It identifies the artifact that must be stored, loaded into memory, and served. A model that looks reasonable during training can still be impractical if its weight footprint, runtime support, latency, or release restrictions do not fit the serving system.
+
+<ExpertOnly>
+
+## Read estimates as assumptions
+
+The parameter estimate uses a simplified dense-transformer approximation. Training time, cost, and energy assume a fixed amount of work per parameter-token and an effective sustained throughput per GPU. Actual results vary with architecture details, data mixture, utilization, communication, checkpointing, kernels, hardware, and failures.
+
+Use the Expert controls to ask comparative questions: What happens when width grows? How does lower precision change serving weight memory? Does a different training-token ratio dominate cost? Treat the output as a transparent design model, then replace its assumptions with measured values before making a real capacity decision.
+
+</ExpertOnly>
+
+<ChapterCheck />

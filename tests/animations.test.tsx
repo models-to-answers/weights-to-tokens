@@ -10,6 +10,7 @@ import {
   GridLaunchExplorer,
   InferenceRuntimeLab,
   LoRALab,
+  ModelBuilderCapstoneLab,
   ParameterBuilderLab,
   PreferenceTrainerLab,
   RequestArrivalLab,
@@ -89,6 +90,63 @@ describe("deterministic animation controls", () => {
 
     rerender(<LoRALab inputs={{ rank: 8, quantized: false }} />);
     expect(screen.getByText(/Share of 7B model/)).toBeInTheDocument();
+  });
+
+  it("carries a purpose-specific model through the Model Factory capstone", () => {
+    const changes: Array<[string, string | number | boolean | null]> = [];
+    const { rerender } = render(
+      <ModelBuilderCapstoneLab
+        step={0}
+        inputs={{ purpose: "domain" }}
+        onInputChange={(key, value) => changes.push([key, value])}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /General assistant/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Domain specialist/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    fireEvent.click(screen.getByRole("button", { name: /On-device model/ }));
+    expect(changes).toContainEqual(["purpose", "edge"]);
+
+    rerender(
+      <ModelBuilderCapstoneLab
+        step={1}
+        inputs={{ purpose: "edge" }}
+      />,
+    );
+    expect(screen.getByText("1.34B")).toBeInTheDocument();
+    expect(screen.getByText("24 layers × 2,048 width")).toBeInTheDocument();
+    expect(screen.queryByRole("slider", { name: /Layers/ })).not.toBeInTheDocument();
+
+    rerender(
+      <ModelBuilderCapstoneLab
+        mode="expert"
+        step={1}
+        inputs={{ purpose: "assistant" }}
+        onInputChange={(key, value) => changes.push([key, value])}
+      />,
+    );
+    fireEvent.change(screen.getByRole("slider", { name: /Layers/ }), {
+      target: { value: "64" },
+    });
+    expect(changes).toContainEqual(["assistant-layers", 64]);
+    expect(screen.getByText(/P ≈ Vd/)).toBeInTheDocument();
+
+    rerender(
+      <ModelBuilderCapstoneLab
+        step={5}
+        inputs={{
+          purpose: "domain",
+          alignment: "preference",
+          release: "open",
+        }}
+      />,
+    );
+    expect(screen.getByText("Your model build sheet")).toBeInTheDocument();
+    expect(screen.getByText("Preference training")).toBeInTheDocument();
+    expect(screen.getByText("Open weights")).toBeInTheDocument();
+    expect(screen.getByText(/Next: take this artifact into the Inference System/)).toBeInTheDocument();
   });
 
   it("keeps preference, inference, and GPU simulators interactive", () => {

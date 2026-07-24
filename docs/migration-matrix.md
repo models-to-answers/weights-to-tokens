@@ -19,6 +19,7 @@ Source baseline: upstream `e95b1afe` (`a76714a` application content), MIT.
 | Teaching it judgement | Preference Trainer | Model Factory: preference training | Implemented and tested |
 | Open weights, closed weights | Weights Spectrum | Model Factory: artifact ownership and deployment choice | Implemented and tested |
 | Adapting one instead | LoRA Lab; Fine-tune Methods | Model Factory: adaptation and PEFT | Implemented and tested |
+| Build one yourself playground | Purpose, architecture, pretraining, alignment, release, build sheet | Model Factory: Build your model | Implemented and tested as a scored capstone |
 
 No substantive AI Model Academy lesson or interaction is excluded.
 

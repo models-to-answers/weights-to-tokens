@@ -22,6 +22,7 @@ export {
 } from "./InferenceLabs";
 export { JourneyOverviewAnimation } from "./JourneyOverviewAnimation";
 export { KernelLaunchAnimation } from "./KernelLaunchAnimation";
+export { ModelBuilderCapstoneLab } from "./ModelBuilderCapstoneLab";
 export { ModelReadinessAnimation } from "./ModelReadinessAnimation";
 export {
   FineTuneMethodsLab,

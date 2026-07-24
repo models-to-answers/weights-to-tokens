@@ -56,6 +56,14 @@ export const animationStageLabels = {
     "Open-ish release",
     "Reproducible open",
   ],
+  "animation.model-factory.model-builder": [
+    "Choose purpose",
+    "Size architecture",
+    "Plan pretraining",
+    "Choose alignment",
+    "Decide release",
+    "Review build sheet",
+  ],
   "animation.inference-system.request-arrival": [
     "Authenticate",
     "Route",

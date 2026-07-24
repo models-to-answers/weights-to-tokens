@@ -214,3 +214,18 @@ Every canonical stage must be reachable in both Beginner and Expert, visibly
 selected, and communicate a distinct learner-facing state through changed
 evidence or explanation. Browser QA plays every stage in both modes; the final
 replay is additionally checked in both System and GPU views.
+
+### D-018 — The Model Factory builder is a scored capstone
+
+- **Status:** Approved
+- **Date:** 2026-07-24
+
+“Build your model” is the fifth Model Factory chapter, not an optional
+playground. It connects purpose, architecture, pretraining, alignment, release,
+and the inference handoff through one deterministic design state.
+
+The chapter has a Core check and an Expert challenge under the same completion
+rules as every other chapter. It is never auto-completed by visiting the final
+build sheet. The academy denominator is therefore fourteen scored items:
+thirteen chapters plus the final replay. Beginner and Expert use the same saved
+model design; Expert adds adjustable assumptions and technical interpretation.

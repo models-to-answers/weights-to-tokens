@@ -36,6 +36,7 @@ For every retained source unit, the review compared:
 | Teaching judgement | SFT vs preferences, proxy risk, RLHF and direct preference methods | Preference Trainer | `training-loop.mdx` Core explanation and Expert optimization layer |
 | Open and closed weights | release categories, control/permanence/modification, full operating burden, license and volume decision | Weights Spectrum | `model-artifact.mdx`; Core compatibility and Expert integrity question |
 | Adapting one instead | prompting, RAG, fine-tuning, from-scratch pretraining with business examples; continued pretraining distinction; LoRA/QLoRA/adapters/prefix/head-only | LoRA Lab; Fine-tune Methods | `adaptation.mdx`; Core freshness and Expert intervention questions |
+| Build one yourself | purpose-first design; genuinely different assistant, specialist, and on-device presets; depth/width sizing; pretraining scale; alignment; release; artifact handoff | Six-stage Model Builder capstone with a persistent build sheet | `build-your-model.mdx`; Core purpose-before-size question; Expert memory/precision question |
 
 ## Packet Academy reconciliation
 

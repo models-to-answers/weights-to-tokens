@@ -29,8 +29,8 @@ test("learner can use canonical content, answer, continue, and reload progress",
   await expect(
     page.getByRole("link", { name: "1.2 How training changes weights", exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel(/complete$/)).toContainText("8%");
-  await expect(page.getByLabel(/complete$/)).toContainText("Expert 1/13");
+  await expect(page.getByLabel(/complete$/)).toContainText("7%");
+  await expect(page.getByLabel(/complete$/)).toContainText("Expert 1/14");
 });
 
 test("direct chapter route survives reload and exposes MDX, glossary, and sources", async ({ page }) => {
@@ -138,6 +138,7 @@ const animationAuditRoutes = [
   "/learn/training-loop",
   "/learn/adaptation",
   "/learn/model-artifact",
+  "/learn/build-your-model",
   "/learn/request-arrival",
   "/learn/model-readiness",
   "/learn/single-gpu-inference",
@@ -147,6 +148,58 @@ const animationAuditRoutes = [
   "/learn/warp-scheduler",
   "/learn/memory-hierarchy",
 ] as const;
+
+test("model builder carries one scored design through both learning modes", async ({
+  page,
+}) => {
+  await page.goto("/learn/build-your-model");
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Build your model",
+  );
+  await expect(
+    page.getByRole("link", { name: "1.5 Build your model", exact: true }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: /On-device model/ }).click();
+  await page.getByRole("tab", { name: "02 Size architecture" }).click();
+  await expect(page.getByText("1.34B", { exact: true })).toBeVisible();
+  await expect(page.getByText("24 layers × 2,048 width")).toBeVisible();
+  await expect(page.getByRole("slider", { name: "Layers" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Expert" }).click();
+  await expect(page.getByText("1.34B", { exact: true })).toBeVisible();
+  await page.getByRole("slider", { name: "Layers" }).fill("28");
+  await expect(page.getByText("1.54B", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await expect(page.getByRole("tab", { name: "02 Size architecture" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByRole("slider", { name: "Layers" })).toHaveValue("28");
+
+  await page.getByRole("tab", { name: "04 Choose alignment" }).click();
+  await page.getByRole("button", { name: /Preference training/ }).click();
+  await page.getByRole("tab", { name: "05 Decide release" }).click();
+  await page.getByRole("button", { name: /Open weights/ }).click();
+  await page.getByRole("tab", { name: "06 Review build sheet" }).click();
+  await expect(page.getByRole("heading", { name: "Your model build sheet" })).toBeVisible();
+  await expect(page.getByText("Preference training", { exact: true })).toBeVisible();
+  await expect(page.getByText("Open weights", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Next: take this artifact into the Inference System."),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: /Purpose sets the capability/ }).click();
+  await page.getByRole("button", { name: /It requires far less weight memory/ }).click();
+  await expect(
+    page.getByRole("button", { name: "Complete & continue" }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Complete & continue" }).click();
+  await expect(page).toHaveURL(/\/learn\/request-arrival$/);
+  await expect(page.getByLabel(/complete$/)).toContainText("Expert 1/14");
+});
 
 test("every chapter animation can be played through in Beginner and Expert", async ({ page }) => {
   test.setTimeout(120_000);
@@ -208,10 +261,10 @@ test("Core and Expert replay completion require the full twelve-stage journey", 
   }
   await expect(complete).toBeEnabled();
   await complete.click();
-  await expect(page.getByLabel(/Core 8% complete/)).toContainText("Core 1/13");
+  await expect(page.getByLabel(/Core 7% complete/)).toContainText("Core 1/14");
   await page.getByRole("button", { name: "Expert" }).click();
   await page.getByRole("button", { name: "Mark journey complete" }).click();
-  await expect(page.getByLabel(/Expert 8% complete/)).toContainText("Expert 1/13");
+  await expect(page.getByLabel(/Expert 7% complete/)).toContainText("Expert 1/14");
 });
 
 test("reset progress is explicit and clears browser-local completion", async ({ page }) => {

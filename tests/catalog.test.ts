@@ -71,6 +71,28 @@ describe("academy catalog", () => {
     }
   });
 
+  it("adds the model builder as the scored fifth Model Factory chapter", () => {
+    const chapter = academyCatalog.chapters.find(
+      (candidate) => candidate.id === "chapter.model-factory.builder",
+    );
+    const part = academyCatalog.parts.find(
+      (candidate) => candidate.id === "model-factory",
+    );
+
+    expect(chapter).toMatchObject({
+      slug: "build-your-model",
+      order: 5,
+      animationIds: ["animation.model-factory.model-builder"],
+      questionIds: [
+        "question.model-factory.builder.01",
+        "question.model-factory.builder.02",
+      ],
+    });
+    expect(part?.chapterIds.at(-1)).toBe("chapter.model-factory.builder");
+    expect(academyCatalog.chapters).toHaveLength(13);
+    expect(academyCatalog.questions).toHaveLength(26);
+  });
+
   it("preserves the required source interaction families", () => {
     const required = [
       "animation.model-factory.token-predictor",
@@ -81,6 +103,7 @@ describe("academy catalog", () => {
       "animation.model-factory.artifact-packaging",
       "animation.model-factory.adaptation-lab",
       "animation.model-factory.fine-tune-methods",
+      "animation.model-factory.model-builder",
       "animation.inference-system.compute-platform",
       "animation.inference-system.model-locality",
       "animation.inference-system.prefill-decode",

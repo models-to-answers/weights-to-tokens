@@ -1086,6 +1086,51 @@ a:focus-visible {
 .scheduler-timeline i.is-past { border-color: #28766d; color: #8eaaa4; background: #173d38; }
 .scheduler-timeline i.is-active { color: #142a28; border-color: var(--amber); background: var(--amber); }
 
+.builder-capstone__context { display: grid; grid-template-columns: auto auto 1fr; gap: .55rem; align-items: center; padding: .75rem 1.25rem; border-bottom: 1px solid #314744; background: #0e201e; }
+.builder-capstone__context span { color: #8eaaa4; font: .54rem var(--font-geist-mono), monospace; text-transform: uppercase; }
+.builder-capstone__context strong { color: #ffc46f; font-size: .72rem; }
+.builder-capstone__context p { margin: 0 !important; color: #c3d5d0 !important; font-size: .67rem !important; text-align: right; }
+.model-purpose-grid, .builder-choice-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; padding: 1.25rem; }
+.model-purpose-grid button, .builder-choice-grid button { min-height: 11rem; padding: .8rem; border: 1px solid #48615c; border-radius: .6rem; color: #c3d5d0; background: #0e201e; cursor: pointer; text-align: left; }
+.model-purpose-grid button.is-selected, .model-purpose-grid button[aria-pressed="true"], .builder-choice-grid button.is-selected, .builder-choice-grid button[aria-pressed="true"] { border-color: var(--amber); background: #2f321d; box-shadow: inset 0 0 24px rgba(240,164,58,.08); }
+.model-purpose-grid span, .builder-choice-grid span { display: block; color: #ffc46f; font: .56rem var(--font-geist-mono), monospace; text-transform: uppercase; }
+.model-purpose-grid strong, .builder-choice-grid strong { display: block; margin: .55rem 0; color: white; font-size: .76rem; line-height: 1.45; }
+.model-purpose-grid small, .builder-choice-grid small { display: block; color: #8eaaa4; font-size: .56rem; line-height: 1.4; }
+.model-purpose-grid p { margin: .7rem 0 0 !important; color: #c3d5d0 !important; font-size: .63rem !important; line-height: 1.45 !important; }
+.builder-stage { display: grid; grid-template-columns: 1.25fr .75fr; gap: 1rem; padding: 1.25rem; }
+.builder-architecture-card, .builder-training-plan { padding: 1rem; border: 1px solid #48615c; border-radius: .65rem; background: #0e201e; }
+.builder-architecture-card > span, .builder-training-plan > span { color: #8eaaa4; font: .55rem var(--font-geist-mono), monospace; text-transform: uppercase; }
+.builder-architecture-card > strong { display: block; margin: .5rem 0 .2rem; color: #ffc46f; font-size: 2.25rem; }
+.builder-architecture-card > p { margin: 0 0 .75rem !important; color: white !important; font-size: .75rem !important; }
+.builder-architecture-card > small, .builder-training-plan > small { display: block; margin-top: .75rem; color: #8eaaa4; font-size: .59rem; line-height: 1.5; }
+.builder-parameter-bar { display: flex; gap: .2rem; height: 3.5rem; }
+.builder-parameter-bar i { min-width: .25rem; border: 1px solid #48615c; background: #1c766d; }
+.builder-parameter-bar i:nth-child(2) { background: #337f97; }
+.builder-parameter-bar i:nth-child(3) { background: var(--amber); }
+.builder-parameter-legend { display: grid; grid-template-columns: repeat(3,1fr); gap: .35rem; margin: .6rem 0 0; padding: 0; list-style: none; }
+.builder-parameter-legend li { display: grid; grid-template-columns: auto 1fr auto; gap: .3rem; align-items: center; color: #8eaaa4; font: .52rem var(--font-geist-mono), monospace; }
+.builder-parameter-legend li i { width: .55rem; height: .55rem; border-radius: .15rem; background: #1c766d; }
+.builder-parameter-legend li:nth-child(2) i { background: #337f97; }
+.builder-parameter-legend li:nth-child(3) i { background: var(--amber); }
+.builder-parameter-legend li strong { color: #d9e5e2; font-size: .52rem; }
+.builder-training-plan > strong { display: block; margin: .5rem 0 1rem; color: white; font-size: .85rem; }
+.builder-run-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.builder-run-metrics > div { padding: .65rem; border: 1px solid #314744; background: #19332f; }
+.builder-run-metrics span { display: block; color: #8eaaa4; font: .5rem var(--font-geist-mono), monospace; text-transform: uppercase; }
+.builder-run-metrics strong { display: block; margin-top: .3rem; color: #ffc46f; font-size: .7rem; }
+.builder-build-sheet { margin: 1.25rem; border: 1px solid var(--amber); border-radius: .75rem; overflow: hidden; background: #0e201e; }
+.builder-build-sheet header { padding: 1rem; border-bottom: 1px solid #48615c; background: #2f321d; }
+.builder-build-sheet header span { color: #8eaaa4; font: .54rem var(--font-geist-mono), monospace; text-transform: uppercase; }
+.builder-build-sheet h4 { margin: .3rem 0; color: white; font-size: 1.35rem; }
+.builder-build-sheet header p { margin: 0 !important; color: #c3d5d0 !important; font-size: .67rem !important; }
+.builder-build-sheet > div { display: grid; grid-template-columns: repeat(3,1fr); gap: .45rem; padding: 1rem; }
+.builder-build-sheet section { padding: .75rem; border: 1px solid #314744; background: #19332f; }
+.builder-build-sheet section span { display: block; color: #8eaaa4; font: .52rem var(--font-geist-mono), monospace; text-transform: uppercase; }
+.builder-build-sheet section strong { display: block; margin: .4rem 0; color: #ffc46f; font-size: .74rem; }
+.builder-build-sheet section small { color: #c3d5d0; font-size: .57rem; line-height: 1.4; }
+.builder-build-sheet > p { margin: 0 1rem 1rem !important; padding: .7rem; border: 1px solid #314744; color: #8eaaa4 !important; font-size: .61rem !important; }
+.builder-build-sheet__handoff { display: block; padding: .8rem 1rem; color: #142a28 !important; background: var(--amber); font-size: .72rem; }
+
 .memory-path-v2 { display: grid; grid-template-columns: repeat(4,1fr); gap: .45rem; padding: 1.25rem; }
 .memory-path-v2 > div { min-height: 7rem; padding: .65rem; border: 1px solid #314744; color: #6f9189; background: #0e201e; }
 .memory-path-v2 > div.is-active { border-color: var(--amber); color: #c3d5d0; }
@@ -1253,6 +1298,9 @@ a:focus-visible {
   .scheduler-scope { align-items: flex-start; flex-direction: column; }
   .scheduler-story, .scheduler-concurrency { grid-template-columns: 1fr; }
   .scheduler-concurrency p { grid-column: 1; }
+  .builder-capstone__context { grid-template-columns: 1fr; }
+  .builder-capstone__context p { text-align: left; }
+  .model-purpose-grid, .builder-choice-grid, .builder-stage, .builder-build-sheet > div { grid-template-columns: 1fr; }
   .judge-flow { grid-template-columns: 1fr; }
   .judge-flow i { transform: rotate(90deg); text-align: center; }
   .scheduler-timeline { grid-template-columns: repeat(3,1fr); }

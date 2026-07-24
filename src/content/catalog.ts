@@ -17,12 +17,13 @@ export const parts = [
     title: "Part I — The AI Model Factory",
     shortTitle: "Model Factory",
     promise:
-      "Understand what weights are, how training creates them, and how a model artifact becomes deployable.",
+      "Understand what weights are, how training creates them, and how product choices become a deployable model artifact.",
     chapterIds: [
       "chapter.model-factory.weights",
       "chapter.model-factory.training",
       "chapter.model-factory.adaptation",
       "chapter.model-factory.artifact",
+      "chapter.model-factory.builder",
     ],
   },
   {
@@ -250,6 +251,54 @@ export const chapters = [
     prerequisites: ["chapter.model-factory.weights"],
   },
   {
+    id: "chapter.model-factory.builder",
+    partId: "model-factory",
+    slug: "build-your-model",
+    order: 5,
+    title: "Build your model",
+    eyebrow: "Purpose to deployable artifact",
+    estimatedMinutes: 12,
+    beginner: {
+      summary:
+        "Start with a product purpose, then carry one model design through sizing, pretraining, alignment, and release.",
+      objectives: [
+        "Connect a model's purpose to its size, memory needs, training plan, and release choice.",
+        "Read a single build sheet that follows the model into inference.",
+      ],
+      blocks: [
+        {
+          type: "callout",
+          label: "A guided design, not a quote",
+          text: "The estimates make trade-offs visible. Real model design still depends on data, evaluation, hardware, software, and measured performance.",
+        },
+      ],
+    },
+    expert: {
+      summary:
+        "Architecture, precision, training scale, alignment, and release policy form one connected systems decision.",
+      objectives: [
+        "Interpret parameter, token, memory, time, cost, and energy estimates with their assumptions.",
+        "Evaluate how model scale and release policy constrain the serving system.",
+      ],
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Expert controls expose the simplifying assumptions behind the estimate. They support comparison, not capacity planning or procurement.",
+        },
+      ],
+    },
+    content: () => import("../../content/chapters/build-your-model.mdx"),
+    animationIds: ["animation.model-factory.model-builder"],
+    questionIds: [
+      "question.model-factory.builder.01",
+      "question.model-factory.builder.02",
+    ],
+    glossaryIds: ["glossary.parameter", "glossary.artifact"],
+    sourceIds: ["source.hf-models", "source.pytorch-autograd"],
+    replayStageIds: [],
+    prerequisites: ["chapter.model-factory.artifact"],
+  },
+  {
     id: "chapter.inference-system.arrival",
     partId: "inference-system",
     slug: "request-arrival",
@@ -289,7 +338,7 @@ export const chapters = [
     glossaryIds: ["glossary.tokenizer", "glossary.admission"],
     sourceIds: ["source.hf-tokenizer", "source.triton-batcher"],
     replayStageIds: ["replay.request-arrives"],
-    prerequisites: ["chapter.model-factory.artifact"],
+    prerequisites: ["chapter.model-factory.builder"],
   },
   {
     id: "chapter.inference-system.readiness",
@@ -636,6 +685,23 @@ const coreQuestions = [
     explanation: "Tokenizer assets define the text-to-token mapping.",
   },
   {
+    id: "question.model-factory.builder.01",
+    chapterId: "chapter.model-factory.builder",
+    kind: "single-choice",
+    prompt: "Why choose the model's purpose before selecting its layers and width?",
+    choices: [
+      choice(
+        "a",
+        "Purpose sets the capability, memory, latency, and cost constraints the design must satisfy.",
+      ),
+      choice("b", "Purpose automatically trains the final weights."),
+      choice("c", "Purpose removes the need for evaluation."),
+    ],
+    correctChoiceId: "a",
+    explanation:
+      "A useful architecture starts from what the model must do and where it must run, not from a parameter count in isolation.",
+  },
+  {
     id: "question.inference-system.arrival.01",
     chapterId: "chapter.inference-system.arrival",
     kind: "single-choice",
@@ -808,6 +874,25 @@ const expertQuestions = [
     explanation: "An immutable manifest and integrity checks keep every artifact component compatible with one model version.",
   },
   {
+    id: "question.model-factory.builder.02",
+    chapterId: "chapter.model-factory.builder",
+    kind: "single-choice",
+    level: "expert",
+    prompt:
+      "Why is a 4-bit 1.3B model generally more plausible on a constrained device than a 16-bit 33B model?",
+    choices: [
+      choice(
+        "a",
+        "It requires far less weight memory and usually less memory traffic, energy, and compute per token.",
+      ),
+      choice("b", "Four-bit weights eliminate the need for a runtime."),
+      choice("c", "Every smaller model is automatically more accurate."),
+    ],
+    correctChoiceId: "a",
+    explanation:
+      "Parameter count and precision directly affect the weight footprint; real device fitness must still be verified with runtime, quality, and latency measurements.",
+  },
+  {
     id: "question.inference-system.arrival.02",
     chapterId: "chapter.inference-system.arrival",
     kind: "single-choice",
@@ -948,6 +1033,7 @@ export const animations = [
   ["animation.model-factory.adaptation-lab", "Inspect a LoRA update", animationStageLabels["animation.model-factory.adaptation-lab"]],
   ["animation.model-factory.fine-tune-methods", "Compare fine-tuning methods", animationStageLabels["animation.model-factory.fine-tune-methods"]],
   ["animation.model-factory.artifact-packaging", "Inspect a model release spectrum", animationStageLabels["animation.model-factory.artifact-packaging"]],
+  ["animation.model-factory.model-builder", "Build one model from purpose to artifact", animationStageLabels["animation.model-factory.model-builder"]],
   ["animation.inference-system.request-arrival", "Prepare a request", animationStageLabels["animation.inference-system.request-arrival"]],
   ["animation.inference-system.compute-platform", "Build the compute platform stack", animationStageLabels["animation.inference-system.compute-platform"]],
   ["animation.inference-system.model-locality", "Move model files into GPU memory", animationStageLabels["animation.inference-system.model-locality"]],
