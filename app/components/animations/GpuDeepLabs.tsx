@@ -100,9 +100,46 @@ const WORK_BREADCRUMB = [
   "Load addresses → operands returned",
 ] as const;
 
-function AnatomyScene({ stage }: { stage: number }): ReactNode {
+function AnatomyScene({
+  stage,
+  expert,
+}: {
+  stage: number;
+  expert: boolean;
+}): ReactNode {
   if (stage === 0) {
-    return <div className="anatomy-package"><div><span>HBM</span><span>HBM</span></div><strong>GPU package</strong><small>GPU die and high-bandwidth memory are connected inside the accelerator package.</small></div>;
+    return (
+      <div className="anatomy-package">
+        <div className="anatomy-package__substrate">
+          <div className="anatomy-package__die">
+            <span>GPU compute die</span>
+            <small>SMs · caches · memory controllers</small>
+          </div>
+          <div className="anatomy-package__hbm">
+            <strong>HBM stacks</strong>
+            <div aria-label="Multiple illustrative HBM stacks">
+              <i>stack</i>
+              <i>stack</i>
+              <i>stack</i>
+              <b aria-hidden="true">…</b>
+            </div>
+            <small>Count and layout vary by accelerator.</small>
+          </div>
+        </div>
+        <strong>Accelerator package · illustrative, not a specific product</strong>
+        <small>
+          The GPU die connects to multiple high-bandwidth-memory stacks; the
+          three stack symbols and ellipsis mean “several,” not exactly three.
+        </small>
+        {expert ? (
+          <small className="anatomy-package__expert">
+            Memory controllers distribute addresses across HBM channels and
+            partitions so the stacks contribute to one device-memory address
+            space.
+          </small>
+        ) : null}
+      </div>
+    );
   }
   if (stage === 1) {
     return <div className="anatomy-die"><span>L2 cache + memory controllers + fabric</span><div>{Array.from({ length: 12 }, (_, index) => <i className={index === 5 ? "is-selected" : ""} key={index}>SM {index + 1}</i>)}</div><strong>One SM selected for the next zoom</strong></div>;
@@ -143,7 +180,7 @@ export function GpuCrankRoomLab({
         <div><span>Work mapped here</span><strong>{WORK_BREADCRUMB[active]}</strong></div>
       </div>
       <div className={`anatomy-scene anatomy-scene--${active}`} aria-live="polite">
-        <AnatomyScene stage={active} />
+        <AnatomyScene stage={active} expert={mode === "expert"} />
       </div>
       <div className="lab-readouts">
         <div><span>Selected level</span><strong>{ANATOMY_STAGES[active]}</strong></div>

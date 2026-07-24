@@ -6,6 +6,7 @@ import { KernelLaunchAnimation } from "@/app/components/animations";
 import {
   CoalescingLab,
   DivergenceSimulator,
+  GpuCrankRoomLab,
   GridLaunchExplorer,
   InferenceRuntimeLab,
   LoRALab,
@@ -131,6 +132,20 @@ describe("deterministic animation controls", () => {
 
     rerender(<CoalescingLab step={4} inputs={{ pattern: "tiled" }} />);
     expect(screen.getByText(/One coalesced HBM fill/)).toBeInTheDocument();
+  });
+
+  it("presents HBM stacks as an illustrative variable-count package layout", () => {
+    const { rerender } = render(<GpuCrankRoomLab mode="beginner" step={0} />);
+    expect(screen.getByText("HBM stacks")).toBeInTheDocument();
+    expect(screen.getByText("Count and layout vary by accelerator.")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Memory controllers distribute addresses/),
+    ).not.toBeInTheDocument();
+
+    rerender(<GpuCrankRoomLab mode="expert" step={0} />);
+    expect(
+      screen.getByText(/Memory controllers distribute addresses/),
+    ).toBeInTheDocument();
   });
 
   it("shows the final response and distinct system and GPU replay evidence", () => {

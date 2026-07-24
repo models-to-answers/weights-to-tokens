@@ -960,9 +960,67 @@ a:focus-visible {
 .anatomy-scene span { color: #8eaaa4; font: .56rem var(--font-geist-mono), monospace; text-transform: uppercase; }
 .anatomy-scene strong { display: block; margin-top: .7rem; color: #ffc46f; }
 .anatomy-scene small { display: block; margin-top: .5rem; color: #8eaaa4; font-size: .62rem; }
-.anatomy-package { display: grid; place-items: center; min-height: 18rem; }
-.anatomy-package > div { display: grid; grid-template-columns: 5rem 5rem; gap: 8rem; padding: 2rem; border: 2px solid #48615c; background: #19332f; }
-.anatomy-package > div span { display: grid; place-items: center; height: 7rem; border: 1px solid #74c9ba; }
+.anatomy-package {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 18rem;
+  text-align: center;
+}
+.anatomy-package__substrate {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1.15fr) minmax(9rem, .85fr);
+  gap: 1rem;
+  width: min(100%, 38rem);
+  padding: 1.2rem;
+  border: 2px solid #48615c;
+  border-radius: .7rem;
+  background: #19332f;
+}
+.anatomy-package__die,
+.anatomy-package__hbm {
+  display: grid;
+  align-content: center;
+  min-height: 8.5rem;
+  padding: .8rem;
+  border: 1px solid #74c9ba;
+  background: #0e201e;
+}
+.anatomy-package__die span {
+  color: white;
+  font-size: .7rem;
+}
+.anatomy-package__hbm > strong {
+  margin: 0;
+  color: white;
+  font-size: .7rem;
+}
+.anatomy-package__hbm > div {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .3rem;
+  margin-top: .6rem;
+}
+.anatomy-package__hbm i,
+.anatomy-package__hbm b {
+  display: grid;
+  place-items: center;
+  min-height: 2.5rem;
+  border: 1px solid #48615c;
+  color: #c3d5d0;
+  background: #19332f;
+  font: normal .5rem var(--font-geist-mono), monospace;
+}
+.anatomy-package__hbm b {
+  color: #ffc46f;
+  font-size: 1rem;
+}
+.anatomy-package__expert {
+  max-width: 38rem;
+  padding: .55rem .7rem;
+  border-left: 2px solid var(--amber);
+  text-align: left;
+}
 .anatomy-die > div, .anatomy-blocks > div, .anatomy-pipelines > div { display: grid; grid-template-columns: repeat(4,1fr); gap: .35rem; margin-top: .8rem; }
 .anatomy-die i, .anatomy-blocks i, .anatomy-pipelines i, .anatomy-scheduler i { display: grid; place-items: center; min-height: 3.5rem; padding: .3rem; border: 1px solid #48615c; color: #c3d5d0; background: #19332f; font: normal .55rem var(--font-geist-mono), monospace; }
 .anatomy-die i.is-selected, .anatomy-blocks i.is-selected, .anatomy-pipelines i.is-selected, .anatomy-scheduler i.is-selected { color: #142a28; border-color: var(--amber); background: var(--amber); }
@@ -1176,6 +1234,7 @@ a:focus-visible {
   .workload-shape > div { grid-template-columns: repeat(8,1fr); }
   .anatomy-warps { grid-template-columns: 1fr; }
   .anatomy-memory { align-items: stretch; grid-template-columns: 1fr; }
+  .anatomy-package__substrate { grid-template-columns: 1fr; }
   .warp-lanes-v2 { grid-template-columns: repeat(8,1fr); }
   .branch-execution { grid-template-columns: 1fr; }
   .judge-flow { grid-template-columns: 1fr; }
