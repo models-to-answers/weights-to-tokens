@@ -62,9 +62,9 @@ is present as follows:
 | Kernel model | Grid Launch Explorer; grid, blocks, threads, warps, launch geometry |
 | SIMT and divergence | 32-lane mask simulator with path cost and reconvergence |
 | Scheduling and latency hiding | eligibility board, four-partition trace, scoreboard explanation, resource triangle |
-| Memory practice | coalescing transaction lab, tiling, bank-conflict caveat, hierarchy |
+| Memory practice | Beginner kitchen analogy; HBM/cache/shared/register responsibilities; organized-versus-scattered delivery; explicit tiling and reuse; Expert sector, alignment, synchronization, and bank-conflict overlay |
 | Kernel lifecycle | host enqueue through block admission, issue, memory completion, retirement; PTX/SASS and synchronization explanation |
-| Optimization | roofline lab, reduction-oriented checklist, profiling and bottleneck-first decision rule |
+| Optimization | Expert-only same-work/fewer-bytes roofline comparison, profiling checklist, and bottleneck-first decision rule |
 | Reference | CPU/GPU translation table and chapter-linked glossary |
 
 ## Layering contract

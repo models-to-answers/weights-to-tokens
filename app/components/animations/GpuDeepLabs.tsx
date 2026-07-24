@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { animationStageLabels } from "@/src/content/animation-stages";
 import type { DeterministicAnimationProps } from "./types";
 import { LabFrame, Slider, Tabs, numeric } from "./ModelFactoryLabs";
@@ -435,7 +435,12 @@ export function SchedulerTraceLab({
 
 const MEMORY_STAGES =
   animationStageLabels["animation.inside-gpu.coalesced-memory"];
-const ACCESS_PATTERNS = ["contiguous", "stride2", "scattered", "tiled"] as const;
+const EXPERT_MEMORY_PATTERNS = [
+  "contiguous",
+  "stride2",
+  "scattered",
+  "tiled",
+] as const;
 
 export function CoalescingLab({
   mode = "beginner",
@@ -445,69 +450,179 @@ export function CoalescingLab({
   onInputChange,
 }: DeterministicAnimationProps) {
   const active = Math.min(step, MEMORY_STAGES.length - 1);
-  const requestedPattern = typeof inputs?.pattern === "string" ? inputs.pattern : "contiguous";
-  const pattern = ACCESS_PATTERNS.includes(requestedPattern as typeof ACCESS_PATTERNS[number]) ? requestedPattern as typeof ACCESS_PATTERNS[number] : "contiguous";
-  const customStride = numeric(inputs, "stride", 17);
-  const stride = pattern === "contiguous" || pattern === "tiled" ? 1 : pattern === "stride2" ? 2 : customStride;
-  const addresses = Array.from({ length: 32 }, (_, lane) => lane * stride);
-  const sectorIds = [...new Set(addresses.map((address) => Math.floor(address / 8)))];
-  const sectors = sectorIds.length;
-  const efficiency = Math.min(1, 4 / sectors);
-  const cacheHits = pattern === "tiled" && active >= 2 ? 28 : 0;
-  const hbmSectors = pattern === "tiled" ? 4 : sectors;
+  const requestedPattern =
+    typeof inputs?.pattern === "string" ? inputs.pattern : "contiguous";
+  const expertPattern = EXPERT_MEMORY_PATTERNS.includes(
+    requestedPattern as (typeof EXPERT_MEMORY_PATTERNS)[number],
+  )
+    ? (requestedPattern as (typeof EXPERT_MEMORY_PATTERNS)[number])
+    : "contiguous";
+  const customStride = Math.max(3, numeric(inputs, "stride", 17));
+  const expertStride =
+    expertPattern === "contiguous" || expertPattern === "tiled"
+      ? 1
+      : expertPattern === "stride2"
+        ? 2
+        : customStride;
+  const expertAddresses = Array.from(
+    { length: 32 },
+    (_, lane) => lane * expertStride,
+  );
+  const expertTransactions = new Set(
+    expertAddresses.map((address) => Math.floor(address / 8)),
+  ).size;
+  const expertEfficiency = Math.min(
+    100,
+    Math.round((128 / (expertTransactions * 32)) * 100),
+  );
   const stageExplanation = [
-    `All 32 lanes issue one load instruction and request 32 addresses. The ${pattern} pattern determines how far apart those addresses are.`,
-    `The coalescer groups requested bytes into ${sectors} aligned 32-byte sector${sectors === 1 ? "" : "s"}. Fewer sectors mean less transferred overhead.`,
-    pattern === "tiled"
-      ? "The block checks shared memory and L1 for a reusable tile before going farther."
-      : "The request checks the SM-local cache path, then L2. A miss must continue to HBM.",
-    `${hbmSectors} sector${hbmSectors === 1 ? "" : "s"} must be served by HBM under this teaching assumption.`,
-    pattern === "tiled"
-      ? "Returned values fill the shared-memory tile; nearby threads reuse them without repeating 28 HBM requests."
-      : "Returned sectors are unpacked into per-lane register values so the waiting warp can become eligible.",
+    "Thousands of GPU threads can calculate quickly, but only after their data arrives. Distance and organization determine how long they wait.",
+    "The same eight useful values can arrive as one organized delivery or as eight scattered deliveries.",
+    "Caches may keep recently used data automatically. A kernel can deliberately place a reusable tile in shared memory, then copy each needed value into a thread's registers.",
+    "Load the tile from HBM once, keep it on the shared-memory workbench, and use it for four calculations.",
+    "Keep the GPU supplied: fetch neighboring values together, retain reusable data nearby, and avoid writing unnecessary intermediates back to HBM.",
   ] as const;
 
   return (
     <LabFrame
-      eyebrow="GPU memory access"
-      title="Follow one warp load and see its addresses become transactions"
-      description="Thirty-two lanes request four-byte values. Aligned neighboring addresses combine into fewer 32-byte sectors; reused values can remain close to the SM."
+      eyebrow="Keeping the GPU supplied"
+      title="Move less data, move it together, and reuse it nearby"
+      description="Think of HBM as a storeroom, shared memory as a workbench, and registers as ingredients already in each worker's hands."
     >
       <Tabs labels={MEMORY_STAGES} active={active} onChange={(index) => onStepChange?.(index)} />
       <div className="stage-narration">
-        <span>Memory stage {active + 1}</span>
+        <span>Kitchen story · step {active + 1}</span>
         <strong>{MEMORY_STAGES[active]}</strong>
         <p>{stageExplanation[active]}</p>
       </div>
-      <div className="pattern-picker" role="group" aria-label="Memory access pattern">
-        {[["contiguous", "Contiguous"], ["stride2", "Stride 2"], ["scattered", "Scattered"], ["tiled", "Tiled reuse"]].map(([id, label]) => <button type="button" className={pattern === id ? "is-active" : ""} aria-pressed={pattern === id} onClick={() => onInputChange?.("pattern", id)} key={id}>{label}</button>)}
-      </div>
-      <div className={`memory-journey memory-journey--stage-${active}`}>
-        <div className="memory-lanes">
-          <span>Warp lanes request addresses</span>
-          <div>{addresses.map((address, lane) => <i className={active >= 0 ? "is-active" : ""} key={lane}><b>L{lane}</b><small>{address * 4}B</small></i>)}</div>
+
+      <div className="memory-kitchen">
+        <div className={active === 0 ? "is-active" : ""}>
+          <span>Farther away</span>
+          <strong>HBM storeroom</strong>
+          <p>Large, shared by the GPU, and expensive to revisit repeatedly.</p>
         </div>
-        <div className="memory-sectors">
-          <span>Aligned 32-byte sectors</span>
-          <div>{sectorIds.slice(0, 32).map((sector) => <i className={active >= 1 ? "is-active" : ""} key={sector}>S{sector}<small>{sector * 32}–{sector * 32 + 31}B</small></i>)}</div>
+        <b aria-hidden="true">→</b>
+        <div className={active >= 2 ? "is-active" : ""}>
+          <span>Near one SM</span>
+          <strong>Shared-memory workbench</strong>
+          <p>A kernel explicitly stages a reusable tile here for one block.</p>
         </div>
-        <div className="memory-path-v2">
-          {["Shared / L1", "L2", "HBM", "Return to registers"].map((label, index) => <div className={active >= index + 2 || (active === 4 && index === 3) ? "is-active" : ""} key={label}><span>{index + 1}</span><strong>{label}</strong></div>)}
-        </div>
-        {pattern === "tiled" && active === 4 ? <div className="tile-reuse-result"><strong>One coalesced HBM fill → shared-memory tile → 28 nearby reuses</strong><p>The block synchronizes once, then reads the staged values without repeating every HBM transaction.</p></div> : null}
-      </div>
-      <div className="lab-grid">
-        <div className="slider-stack">
-          {mode === "expert" && pattern === "scattered" ? <Slider label="Address stride" value={customStride} min={3} max={31} onChange={(value) => onInputChange?.("stride", value)} /> : <p className="lab-guidance">Change the pattern, then step through addresses, sectors, cache lookup, HBM fetch, and returned data.</p>}
-        </div>
-        <div className="lab-readouts lab-readouts--stack">
-          <div><span>Warp request</span><strong>32 useful values = 128 bytes</strong></div>
-          <div><span>Transactions</span><strong>{sectors} × 32-byte sectors before reuse</strong></div>
-          <div><span>Useful-byte efficiency</span><strong>{(efficiency * 100).toFixed(0)}%</strong></div>
-          <div><span>HBM service</span><strong>{hbmSectors} sectors{cacheHits ? `; ${cacheHits} later values reused on-chip` : ""}</strong></div>
-          {mode === "expert" ? <div><span>Next check</span><strong>Alignment, cache behavior, shared-memory bank conflicts, and synchronization.</strong></div> : null}
+        <b aria-hidden="true">→</b>
+        <div className={active >= 2 ? "is-active" : ""}>
+          <span>In each thread</span>
+          <strong>Registers</strong>
+          <p>The values a thread is using right now.</p>
         </div>
       </div>
+
+      {active === 1 ? (
+        <div className="delivery-comparison">
+          <section className="delivery-card delivery-card--organized">
+            <span>Organized delivery</span>
+            <strong>Neighboring threads ask for neighboring values</strong>
+            <div aria-label="Eight neighboring values">
+              {Array.from({ length: 8 }, (_, index) => <i key={index}>{index}</i>)}
+            </div>
+            <p><b>1 delivery</b> for eight useful values</p>
+          </section>
+          <section className="delivery-card delivery-card--scattered">
+            <span>Scattered delivery</span>
+            <strong>Threads ask for values on different shelves</strong>
+            <div aria-label="Eight scattered values">
+              {[0, 19, 41, 74, 106, 139, 173, 220].map((value) => <i key={value}>{value}</i>)}
+            </div>
+            <p><b>8 deliveries</b> for the same eight useful values</p>
+          </section>
+        </div>
+      ) : null}
+
+      {active === 2 ? (
+        <div className="memory-management-split">
+          <section>
+            <span>Mostly automatic</span>
+            <strong>L2 and L1 cache path</strong>
+            <p>Hardware can serve a request from recently retained data. The kernel does not choose an exact cache slot.</p>
+          </section>
+          <section>
+            <span>Explicit kernel action</span>
+            <strong>Stage a tile in shared memory</strong>
+            <p>Threads cooperate to load useful values once, synchronize, and then reuse the workbench.</p>
+          </section>
+        </div>
+      ) : null}
+
+      {active === 3 ? (
+        <div className="reuse-story">
+          <div className="reuse-story__flow">
+            <span>HBM</span><b>one organized load</b><span>Shared tile</span>
+            <div>{[1, 2, 3, 4].map((item) => <i key={item}>Calculation {item}</i>)}</div>
+          </div>
+          <div className="reuse-story__metrics">
+            <strong>1 HBM delivery</strong>
+            <strong>4 calculations</strong>
+            <strong>3 repeated deliveries avoided</strong>
+          </div>
+        </div>
+      ) : null}
+
+      {active === 4 ? (
+        <div className="memory-action-summary">
+          <section><span>1</span><strong>Coalesce</strong><p>Map neighboring threads to neighboring data.</p></section>
+          <section><span>2</span><strong>Tile and reuse</strong><p>Load once into shared memory and use it repeatedly.</p></section>
+          <section><span>3</span><strong>Keep intermediates close</strong><p>Use registers and kernel fusion when practical.</p></section>
+          <div className="tile-reuse-result"><strong>One coalesced HBM fill → shared-memory tile → repeated nearby use</strong><p>The exact savings depend on the kernel and data layout.</p></div>
+        </div>
+      ) : null}
+
+      {mode === "expert" ? (
+        <aside className="memory-expert-overlay">
+          <span>Full warp overlay</span>
+          <strong>What the hardware sees</strong>
+          <p>A full warp has 32 lanes. With four-byte values, 32 neighboring aligned requests occupy four 32-byte sectors; widely scattered addresses can require many more sectors.</p>
+          <div className="pattern-picker" role="group" aria-label="Full warp access pattern">
+            {[
+              ["contiguous", "Contiguous"],
+              ["stride2", "Stride 2"],
+              ["scattered", "Scattered"],
+              ["tiled", "Tiled reuse"],
+            ].map(([id, label]) => (
+              <button
+                type="button"
+                className={expertPattern === id ? "is-active" : ""}
+                aria-pressed={expertPattern === id}
+                onClick={() => onInputChange?.("pattern", id)}
+                key={id}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {expertPattern === "scattered" ? (
+            <Slider
+              label="Address stride"
+              value={customStride}
+              min={3}
+              max={31}
+              onChange={(value) => onInputChange?.("stride", value)}
+            />
+          ) : null}
+          <div className="memory-expert-metrics">
+            <strong>{expertTransactions} transactions</strong>
+            <strong>{expertEfficiency}% useful-byte efficiency</strong>
+            <strong>
+              {expertPattern === "tiled"
+                ? "4 sectors fetched once, then reused"
+                : `Lane addresses advance by ${expertStride} values`}
+            </strong>
+          </div>
+          <dl>
+            <div><dt>Coalescing changes</dt><dd>Transactions used for the first fetch</dd></div>
+            <div><dt>Tiling changes</dt><dd>How often the fetched values return to HBM</dd></div>
+            <div><dt>Also verify</dt><dd>Alignment, bank conflicts, synchronization, and occupancy</dd></div>
+          </dl>
+        </aside>
+      ) : null}
     </LabFrame>
   );
 }
@@ -523,79 +638,96 @@ export function RooflineLab({
   onInputChange,
 }: DeterministicAnimationProps) {
   const active = Math.min(step, ROOFLINE_STAGES.length - 1);
-  const flops = numeric(inputs, "flops", 128);
-  const bytes = numeric(inputs, "bytes", 64);
-  const bandwidth = numeric(inputs, "bandwidth", 3);
-  const peak = numeric(inputs, "peak", 1000);
-  const intensity = flops / bytes;
-  const attainable = Math.min(peak, bandwidth * intensity);
+  const work = Math.max(64, numeric(inputs, "work", 512));
+  const naiveBytes = Math.max(32, numeric(inputs, "naive-bytes", 256));
+  const reuseFactor = Math.max(1, numeric(inputs, "reuse-factor", 4));
+  const bandwidth = Math.max(1, numeric(inputs, "bandwidth", 3));
+  const peak = Math.max(25, numeric(inputs, "peak", 100));
+  const reuseBytes = Math.max(4, Math.round(naiveBytes / reuseFactor));
+  const naiveIntensity = work / naiveBytes;
+  const reuseIntensity = work / reuseBytes;
+  const naiveAttainable = Math.min(peak, bandwidth * naiveIntensity);
+  const reuseAttainable = Math.min(peak, bandwidth * reuseIntensity);
   const ridge = peak / bandwidth;
-  const memoryBound = intensity < ridge;
-  const bins = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512];
-  const maxLog = Math.log10(Math.max(peak, 10));
-  const pointX = Math.max(
-    3,
-    Math.min(
-      97,
-      ((Math.log2(Math.max(intensity, bins[0])) - Math.log2(bins[0])) /
-        (Math.log2(bins.at(-1)!) - Math.log2(bins[0]))) *
-        100,
-    ),
-  );
-  const pointY = Math.max(
-    5,
-    Math.min(
-      95,
-      (Math.log10(Math.max(attainable, 1)) / Math.max(maxLog, 1)) * 100,
-    ),
-  );
+  const reuseIsMemoryBound = reuseIntensity < ridge;
+  const pointPosition = (intensity: number) =>
+    `${Math.min(90, 10 + Math.max(0, Math.log2(intensity)) * 11)}%`;
+  const pointHeight = (attainable: number) =>
+    `${Math.min(80, 20 + (attainable / peak) * 60)}%`;
+  const stageExplanation = [
+    `${work} FLOPs of useful work must happen either way. Only the data plan changes.`,
+    `The naive version performs ${work} FLOPs after moving ${naiveBytes} bytes.`,
+    `The reuse version performs the same ${work} FLOPs but moves only ${reuseBytes} bytes from the measured memory level.`,
+    "Fewer bytes move the reuse design to the right: more useful calculation is performed per delivered byte.",
+    reuseIsMemoryBound
+      ? "The reuse design remains on the bandwidth side. Investigate more reuse, coalescing, fusion, or unnecessary traffic."
+      : "The reuse design reaches the compute side. Next inspect math pipelines, dependencies, and tensor-core eligibility.",
+  ] as const;
 
   return (
     <LabFrame
-      eyebrow="Expert optimization model"
-      title="Use a scaled roofline to choose what to investigate first"
-      description="Arithmetic intensity is work per byte. Bandwidth limits the rising region; peak compute limits the flat region."
+      eyebrow="Expert diagnostic"
+      title="Same calculation, two data plans"
+      description="Arithmetic intensity is not a knob by itself. It rises when an implementation performs the same useful work while moving fewer bytes."
     >
       <Tabs labels={ROOFLINE_STAGES} active={active} onChange={(index) => onStepChange?.(index)} />
-      <div className="roofline-v2">
-        <div className="roofline-v2__bars">
-          {bins.map((bin) => {
-            const roof = Math.min(peak, bandwidth * bin);
-            const height = Math.max(5, (Math.log10(Math.max(roof, 1)) / Math.max(maxLog, 1)) * 100);
-            const selected = Math.abs(Math.log2(Math.max(intensity, 0.25)) - Math.log2(bin)) < 0.6;
-            return <div key={bin}><i className={selected ? "is-selected" : ""} style={{ height: `${height}%` }}><span>{roof.toFixed(0)}</span></i><small>{bin}</small></div>;
-          })}
-        </div>
-        <span className="roofline-v2__y">Attainable TFLOP/s</span>
-        <span className="roofline-v2__x">Arithmetic intensity · FLOP/byte</span>
-        <div
-          className="roofline-v2__point"
-          style={{ left: `${pointX}%`, bottom: `${pointY}%` } as CSSProperties}
-        >
-          <strong>Your kernel: {intensity.toFixed(2)} FLOP/byte → roof {attainable.toFixed(1)} TFLOP/s</strong>
-        </div>
-      </div>
       <div className="stage-narration">
-        <span>Guided step {active + 1}</span>
+        <span>Roofline bridge · step {active + 1}</span>
         <strong>{ROOFLINE_STAGES[active]}</strong>
-        <p>{active === 0 ? `${flops} floating-point operations are performed per element.` : active === 1 ? `${bytes} bytes move per element at the measured memory level.` : active === 2 ? `${flops} ÷ ${bytes} = ${intensity.toFixed(2)} FLOP/byte.` : active === 3 ? `The ridge point is ${ridge.toFixed(1)} FLOP/byte; this kernel is ${memoryBound ? "below" : "at or beyond"} it.` : memoryBound ? "First investigate traffic, coalescing, locality, reuse, and fusion." : "First investigate math pipelines, instruction mix, dependencies, and tensor-core eligibility."}</p>
+        <p>{stageExplanation[active]}</p>
       </div>
+
+      <div className={`roofline-work-compare roofline-work-compare--stage-${active}`}>
+        <section className="roofline-work-card">
+          <span>Useful calculation</span>
+          <strong>{work} FLOPs of useful work</strong>
+          <p>Identical in both implementations</p>
+        </section>
+        <section className={active >= 1 ? "roofline-work-card is-active" : "roofline-work-card"}>
+          <span>Naive data plan</span>
+          <strong>{work} FLOPs ÷ {naiveBytes} bytes = {naiveIntensity.toFixed(2)} FLOP/byte</strong>
+          <p>Fetch or materialize data repeatedly</p>
+        </section>
+        <section className={active >= 2 ? "roofline-work-card is-improved" : "roofline-work-card"}>
+          <span>Reuse data plan</span>
+          <strong>{work} FLOPs ÷ {reuseBytes} bytes = {reuseIntensity.toFixed(2)} FLOP/byte</strong>
+          <p>Work did not change; memory traffic fell {reuseFactor}×.</p>
+        </section>
+      </div>
+
+      {active >= 3 ? (
+        <div className="roofline-simple">
+          <div className="roofline-simple__roof"><i /><b /></div>
+          <span className="roofline-simple__memory">Memory-limited side</span>
+          <span className="roofline-simple__compute">Compute-limited side</span>
+          <div className="roofline-simple__point is-naive" style={{ left: pointPosition(naiveIntensity), bottom: pointHeight(naiveAttainable) }}>
+            <i /><strong>Naive · {naiveIntensity.toFixed(2)} FLOP/byte</strong>
+          </div>
+          <div className="roofline-simple__point is-reuse" style={{ left: pointPosition(reuseIntensity), bottom: pointHeight(reuseAttainable) }}>
+            <i /><strong>Reuse · {reuseIntensity.toFixed(2)} FLOP/byte</strong>
+          </div>
+          <p>Move right by doing more useful work per byte—not by changing a setting called “intensity.”</p>
+        </div>
+      ) : null}
+
       <div className="lab-grid">
         <div className="slider-stack">
           {mode === "expert" ? (
             <>
-              <Slider label="FLOPs per element" value={flops} min={8} max={2048} step={8} onChange={(value) => onInputChange?.("flops", value)} />
-              <Slider label="Bytes moved per element" value={bytes} min={4} max={512} step={4} onChange={(value) => onInputChange?.("bytes", value)} />
+              <Slider label="Useful work" value={work} min={64} max={2048} step={64} unit=" FLOPs" onChange={(value) => onInputChange?.("work", value)} />
+              <Slider label="Naive bytes moved" value={naiveBytes} min={32} max={1024} step={32} unit=" bytes" onChange={(value) => onInputChange?.("naive-bytes", value)} />
+              <Slider label="Reuse factor" value={reuseFactor} min={1} max={16} unit="×" onChange={(value) => onInputChange?.("reuse-factor", value)} />
               <Slider label="Memory bandwidth" value={bandwidth} min={1} max={8} step={0.5} unit=" TB/s" onChange={(value) => onInputChange?.("bandwidth", value)} />
-              <Slider label="Compute ceiling" value={peak} min={100} max={2000} step={50} unit=" TFLOP/s" onChange={(value) => onInputChange?.("peak", value)} />
+              <Slider label="Compute ceiling" value={peak} min={25} max={400} step={25} unit=" TFLOP/s" onChange={(value) => onInputChange?.("peak", value)} />
             </>
-          ) : <p className="lab-guidance">Core uses this as a guided diagnosis. Expert mode exposes the numeric workload and hardware assumptions.</p>}
+          ) : <p className="lab-guidance">This diagnostic is intentionally placed in Expert depth. Start with the two implementations before changing their assumptions.</p>}
         </div>
         <div className="lab-readouts lab-readouts--stack">
-          <div><span>Arithmetic intensity</span><strong>{intensity.toFixed(2)} FLOP/byte</strong></div>
-          <div><span>Attainable roof</span><strong>{attainable.toFixed(1)} TFLOP/s</strong></div>
-          <div><span>Diagnosis</span><strong>{memoryBound ? "Memory-bound under these assumptions" : "Compute-bound under these assumptions"}</strong></div>
-          <div><span>Verify</span><strong>A roofline classifies the likely limit; a profiler must identify the specific cause.</strong></div>
+          <div><span>Naive attainable roof</span><strong>{naiveAttainable.toFixed(1)} TFLOP/s</strong></div>
+          <div><span>Reuse attainable roof</span><strong>{reuseAttainable.toFixed(1)} TFLOP/s</strong></div>
+          <div><span>Ridge point</span><strong>{ridge.toFixed(1)} FLOP/byte</strong></div>
+          <div><span>First investigation</span><strong>{reuseIsMemoryBound ? "Traffic, coalescing, locality, reuse, and fusion" : "Math pipelines, dependencies, and tensor-core eligibility"}</strong></div>
+          <div><span>Verify</span><strong>A roofline classifies the likely limit; a profiler identifies the specific cause.</strong></div>
         </div>
       </div>
     </LabFrame>

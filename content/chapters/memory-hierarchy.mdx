@@ -1,70 +1,101 @@
-## Move fewer bytes, and move them together
+## How can a fast GPU still wait?
 
-Registers are private to threads. Shared memory is programmer-managed storage
-shared by a block. Caches sit between SMs and device memory, while HBM provides
-large capacity and high aggregate bandwidth at longer latency.
+A GPU can perform an enormous number of calculations, but its execution units
+cannot calculate with data that has not arrived. This chapter asks one question:
 
-When neighboring threads request neighboring aligned addresses, the memory
-system can combine their requests into fewer transactions. Scattered access
-usually transfers more data and spends more transactions to serve the same
-useful values.
+> How do we keep the GPU working instead of waiting for data?
 
-Performance depends on both access pattern and reuse. Arithmetic intensity
-helps explain whether a kernel is limited primarily by compute or data movement.
+Think of the GPU as a large kitchen:
+
+- **HBM is the storeroom.** It holds a lot of data, but repeatedly visiting it
+  costs time and bandwidth.
+- **L2 and L1 are nearby caches.** Hardware may retain recently used data there
+  automatically.
+- **Shared memory is a workbench.** A kernel deliberately places a reusable
+  group of values there for threads in one block.
+- **Registers are ingredients in a worker's hands.** They hold the values one
+  thread is using right now.
+
+These are not always a rigid sequence that every load must visit. A normal load
+may be served from a hardware cache. Shared memory is different: a kernel
+explicitly stages data there when coordinated reuse is worthwhile.
 
 <InteractionSlot animationId="animation.inside-gpu.coalesced-memory" />
 
+## Two actions reduce HBM traffic
+
+### 1. Organize the first delivery
+
+Threads are already grouped into warps. A kernel does not normally create a new
+warp just to improve memory access. Instead, it maps neighboring threads to
+neighboring data. The memory system can combine those requests into fewer
+deliveries. This is called **coalescing**.
+
+Scattered requests still return the requested values, but they may require many
+more deliveries.
+
+### 2. Reuse data after it arrives
+
+If several calculations need the same values, threads can cooperate to load a
+tile once, place it on the shared-memory workbench, and reuse it. Frequently
+used individual values can remain in registers. Kernel fusion can also avoid
+writing an intermediate result to HBM only to read it back immediately.
+
+The practical rule is:
+
+> Move related data together, keep reusable data nearby, and avoid unnecessary
+> round trips to HBM.
+
+In AI inference, the same principle applies to model weights, activations,
+intermediate tensors, and the KV cache. Application developers usually receive
+these optimizations through frameworks, compilers, and tuned libraries. Kernel
+engineers work directly on layouts, coalescing, tiling, fusion, and register
+use.
+
 <ExpertOnly>
 
-### Transactions, tiling, and bank conflicts
+## What the simplified picture hides
 
-A warp’s addresses are grouped into aligned memory sectors or transactions.
-Contiguous aligned accesses use transferred bytes efficiently; strided or
-scattered accesses may request the same number of values through many more
-transactions. Shared-memory tiling pays for a coalesced global load once and
-reuses the values across threads. The tile design must also avoid shared-memory
-bank conflicts and excessive synchronization.
+A full warp has 32 lanes. The memory system groups requested addresses into
+aligned sectors or transactions. Neighboring aligned accesses use transferred
+bytes efficiently; scattered accesses may require many more transactions.
 
-</ExpertOnly>
+Shared-memory tiling can reduce repeated HBM traffic, but a real design must
+also consider bank conflicts, synchronization, register pressure, occupancy,
+cache behavior, and whether the tile is reused enough to repay its setup cost.
 
-## Choose an optimization from the bottleneck
+## Arithmetic intensity connects reuse to performance
 
-The roofline model compares the work performed with bytes moved. A kernel below
-the sloped bandwidth roof needs better locality, reuse, coalescing, or fusion.
-A kernel near the flat compute roof needs more effective math pipelines,
-instruction efficiency, or algorithmic change.
+Arithmetic intensity is useful work divided by bytes moved from the memory
+level being measured:
+
+```text
+arithmetic intensity = floating-point operations ÷ bytes moved
+```
+
+It is not an independent setting. If two implementations perform the same
+calculation, the one that moves fewer bytes has higher arithmetic intensity.
+The roofline model uses that comparison to indicate whether memory bandwidth or
+compute capacity is the more likely limit.
 
 <InteractionSlot animationId="animation.inside-gpu.roofline" />
 
-<ExpertOnly>
+A point on the rising side of the roofline suggests investigating traffic,
+coalescing, locality, reuse, tiling, caching, or fusion. A point near the flat
+compute roof suggests investigating math pipelines, instruction dependencies,
+algorithm choice, and tensor-core eligibility. A roofline identifies the
+likely family of constraints; a profiler is still needed to find the actual
+cause.
 
-Arithmetic intensity is operations per byte moved from the measured memory
-level. Below the sloped roof, reduce traffic or increase reuse through layout,
-coalescing, tiling, caching, or fusion. Near the flat roof, inspect instruction
-mix, tensor-core eligibility, dependencies, and achieved issue rate. A roofline
-classifies the likely bound; a profiler identifies the specific cause.
+## Expert optimization checklist
+
+1. Profile the hottest kernel and its dominant stall reason.
+2. Measure useful work and bytes moved at the relevant memory level.
+3. Check alignment and coalescing.
+4. Look for values or intermediate tensors that can be reused.
+5. Consider tiling or fusion only when their coordination cost is justified.
+6. Re-measure correctness and end-to-end latency after each change.
 
 </ExpertOnly>
-
-## A practical reduction checklist
-
-1. Profile first: identify the hottest kernel and its dominant stall reason.
-2. Remove unnecessary host-device transfers and intermediate tensors.
-3. Make neighboring lanes access neighboring aligned addresses.
-4. Reuse values in registers, shared memory, or cache.
-5. Fuse operations when it avoids materializing large intermediates.
-6. Check occupancy resources without treating occupancy as the final goal.
-7. Re-measure correctness and end-to-end latency after every change.
-
-## CPU-to-GPU translation table
-
-| CPU-oriented term | Closest GPU mental model | Important difference |
-| --- | --- | --- |
-| CPU socket | GPU device | The GPU is a throughput coprocessor with its own memory |
-| CPU core | Streaming multiprocessor | An SM hosts many warps and several execution pipelines |
-| Software thread | CUDA thread | Threads issue in 32-thread warps |
-| SIMD vector | Warp lanes | Branch masks can make only some lanes active |
-| L1/L2 cache | Shared/L1 and L2 | Shared memory is explicitly managed by a block |
-| System RAM | HBM | HBM has high bandwidth but is separate from host memory |
 
 <ChapterCheck />

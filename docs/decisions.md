@@ -229,3 +229,21 @@ rules as every other chapter. It is never auto-completed by visiting the final
 build sheet. The academy denominator is therefore fourteen scored items:
 thirteen chapters plus the final replay. Beginner and Expert use the same saved
 model design; Expert adds adjustable assumptions and technical interpretation.
+
+### D-019 — GPU memory begins with delivery and reuse
+
+- **Status:** Approved
+- **Date:** 2026-07-24
+
+The Beginner memory chapter answers one question: how to keep GPU execution
+units working instead of waiting for data. It uses the kitchen analogy to
+distinguish HBM, hardware-managed L1/L2 caches, kernel-managed shared memory,
+and per-thread registers. Its shared animation first compares organized and
+scattered delivery, then demonstrates explicit reuse after one HBM fetch.
+
+Transaction sectors, alignment, synchronization, bank conflicts, and the
+roofline remain available in Expert depth. The roofline must compare two
+implementations performing the same useful work; arithmetic intensity is
+derived from work divided by bytes moved and is not presented as an arbitrary
+setting. The Expert interaction may be hidden from Beginner under D-003 because
+the diagnostic model would overload the essential path.

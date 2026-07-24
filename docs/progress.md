@@ -106,6 +106,15 @@ milestone's acceptance evidence has not been recorded here.
   partition. It now distinguishes a newly issued instruction from work already
   in flight, shows a memory request overlapping independent arithmetic, and
   explains how real SMs may use multiple scheduler partitions.
+- Rebuilt the GPU-memory chapter around the kitchen mental model. Beginner now
+  distinguishes the HBM storeroom, automatic L1/L2 cache path,
+  kernel-managed shared-memory workbench, and per-thread registers; compares
+  one organized delivery with eight scattered deliveries; and demonstrates
+  one HBM load reused for four calculations. Expert retains full-warp sectors,
+  alignment, bank-conflict, synchronization, and profiling depth.
+- Reframed the roofline as an Expert-only comparison of the same useful work
+  under naive and reuse-oriented data plans. Arithmetic intensity now changes
+  because bytes moved change, rather than appearing to be an independent knob.
 - Enabled GitHub-flavored Markdown tables and removed learner-visible internal
   implementation labels.
 - Completed a Chrome playback audit of all 44 chapter animation projections
@@ -122,14 +131,14 @@ Current validation on 2026-07-24:
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run lint` | Passed |
-| `npm run test:unit` | Passed: 3 files, 31 tests |
+| `npm run test:unit` | Passed: 3 files, 33 tests |
 | `npm run build` | Passed |
-| `npm test` | Passed: 31 unit/component tests, production build, 2 rendered-HTML checks |
-| `npm run test:e2e` | Passed: 26 desktop/mobile Chromium journeys |
+| `npm test` | Passed: 33 unit/component tests, production build, 2 rendered-HTML checks |
+| `npm run test:e2e` | Passed: 28 desktop/mobile Chromium journeys |
 | `git diff --check` | Passed |
 
-Browser coverage confirms all 23 chapter interactions in both learning modes,
-including every animation stage, Expert
+Browser coverage confirms every interaction exposed by each learning mode
+(22 in Beginner and 23 in Expert), including every animation stage, Expert
 disclosure, correct answer
 feedback, immediate local persistence across reload, direct routes, keyboard
 resource tabs, reset, replay zoom continuity, reduced motion, no serious or

@@ -201,7 +201,59 @@ test("model builder carries one scored design through both learning modes", asyn
   await expect(page.getByLabel(/complete$/)).toContainText("Expert 1/14");
 });
 
-test("every chapter animation can be played through in Beginner and Expert", async ({ page }) => {
+test("GPU memory chapter teaches delivery and reuse before Expert roofline depth", async ({
+  page,
+}) => {
+  await page.goto("/learn/memory-hierarchy");
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Keep the GPU supplied with data",
+  );
+  await expect(page.getByText("HBM is the storeroom.")).toBeVisible();
+
+  const memoryLab = page.locator(
+    "section[data-animation-id='animation.inside-gpu.coalesced-memory']",
+  );
+  await expect(memoryLab).toBeVisible();
+  await expect(
+    page.locator("section[data-animation-id='animation.inside-gpu.roofline']"),
+  ).toHaveCount(0);
+
+  await memoryLab.getByRole("tab", { name: "02 Compare deliveries" }).click();
+  await expect(memoryLab.getByText("1 delivery")).toBeVisible();
+  await expect(memoryLab.getByText("8 deliveries")).toBeVisible();
+  await memoryLab.getByRole("tab", { name: "04 Reuse one delivery" }).click();
+  await expect(memoryLab.getByText("1 HBM delivery")).toBeVisible();
+  await expect(memoryLab.getByText("3 repeated deliveries avoided")).toBeVisible();
+
+  await page.getByRole("button", { name: "Expert" }).click();
+  await expect(
+    memoryLab.getByRole("tab", { name: "04 Reuse one delivery" }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(memoryLab.getByText("Full warp overlay")).toBeVisible();
+
+  const rooflineLab = page.locator(
+    "section[data-animation-id='animation.inside-gpu.roofline']",
+  );
+  await expect(rooflineLab).toBeVisible();
+  await rooflineLab.getByRole("tab", { name: "03 Reduce bytes with reuse" }).click();
+  await expect(
+    rooflineLab.getByText(/Work did not change; memory traffic fell/),
+  ).toBeVisible();
+  await rooflineLab.getByRole("tab", { name: "04 Compare intensity" }).click();
+  await expect(rooflineLab.getByText(/Naive ·/)).toBeVisible();
+  await expect(rooflineLab.getByText(/Reuse ·/)).toBeVisible();
+
+  await page.reload();
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await expect(
+    page
+      .locator("section[data-animation-id='animation.inside-gpu.roofline']")
+      .getByRole("tab", { name: "04 Compare intensity" }),
+  ).toHaveAttribute("aria-selected", "true");
+});
+
+test("every animation exposed by each learning mode can be played through", async ({ page }) => {
   test.setTimeout(120_000);
   for (const mode of ["Beginner", "Expert"] as const) {
     for (const route of animationAuditRoutes) {

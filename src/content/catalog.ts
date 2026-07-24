@@ -589,24 +589,24 @@ export const chapters = [
     partId: "inside-gpu",
     slug: "memory-hierarchy",
     order: 4,
-    title: "Move data through GPU memory",
-    eyebrow: "Coalescing, locality, and bandwidth",
-    estimatedMinutes: 11,
+    title: "Keep the GPU supplied with data",
+    eyebrow: "Move less, organize it, reuse it",
+    estimatedMinutes: 10,
     beginner: {
       summary:
-        "Fast execution depends on getting nearby threads to access nearby data and on reusing data close to the compute units.",
+        "A GPU stays busy when related data arrives together and reusable data remains close to the execution units.",
       objectives: [
-        "Order the major GPU memory layers.",
-        "Explain coalesced versus scattered access.",
+        "Distinguish HBM, hardware caches, shared memory, and registers.",
+        "Explain how organized delivery and reuse reduce trips to HBM.",
       ],
       blocks: [],
     },
     expert: {
       summary:
-        "Access width, alignment, cache behavior, shared-memory banking, and arithmetic intensity determine memory efficiency.",
+        "Transactions, alignment, cache behavior, shared-memory banking, fusion, and arithmetic intensity determine memory efficiency.",
       objectives: [
-        "Analyze a coalesced load.",
-        "Connect arithmetic intensity to compute- or memory-bound behavior.",
+        "Separate coalescing of the first fetch from reuse after the fetch.",
+        "Derive arithmetic intensity by comparing useful work with bytes moved.",
       ],
       blocks: [],
     },

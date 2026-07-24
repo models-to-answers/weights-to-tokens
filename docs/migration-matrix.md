@@ -49,9 +49,9 @@ Source baseline: `66f6f9fb`, confirmed current against `origin/main`.
 | What is a kernel? | Grid/block/thread launch explorer | Inside the GPU: kernel programming model | Implemented and tested |
 | SIMT, warps, divergence | Warp divergence simulator | Inside the GPU: SIMT and divergence | Implemented and tested |
 | Scheduler and latency hiding | Four-partition instruction trace; warp scheduler simulator; execution pipeline | Inside the GPU: scheduling | Implemented and tested |
-| Memory in practice | Coalescing simulator; shared-memory worked example | Inside the GPU: memory | Implemented and tested |
+| Memory in practice | Organized-versus-scattered delivery; shared-memory reuse; Expert transaction overlay | Inside the GPU: keep the GPU supplied | Implemented and tested |
 | Life of a kernel launch | Build-time and runtime eight-stage launch trace | Inside the GPU: end-to-end kernel launch | Implemented and tested |
-| Optimizing kernels | Roofline and reduction checklist | Inside the GPU: optimization | Implemented and tested |
+| Optimizing kernels | Same-work/fewer-bytes roofline comparison and optimization checklist | Inside the GPU: Expert optimization | Implemented and tested |
 | Cheat sheet and glossary | CPU/GPU translation table and glossary | Inside the GPU: reference | Implemented and tested |
 
 No substantive GPU Tutorial chapter or interaction is excluded.

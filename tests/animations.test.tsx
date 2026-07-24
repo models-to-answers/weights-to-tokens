@@ -14,6 +14,7 @@ import {
   ParameterBuilderLab,
   PreferenceTrainerLab,
   RequestArrivalLab,
+  RooflineLab,
   SchedulerTraceLab,
   TokenPredictorLab,
 } from "@/app/components/animations";
@@ -195,6 +196,66 @@ describe("deterministic animation controls", () => {
 
     rerender(<CoalescingLab step={4} inputs={{ pattern: "tiled" }} />);
     expect(screen.getByText(/One coalesced HBM fill/)).toBeInTheDocument();
+  });
+
+  it("teaches organized delivery and reuse before exposing memory transactions", () => {
+    const changes: Array<[string, string | number | boolean | null]> = [];
+    const { rerender } = render(
+      <CoalescingLab mode="beginner" step={0} />,
+    );
+    expect(screen.getByText("HBM storeroom")).toBeInTheDocument();
+    expect(screen.getByText("Shared-memory workbench")).toBeInTheDocument();
+    expect(screen.queryByText(/32-byte sector/)).not.toBeInTheDocument();
+
+    rerender(<CoalescingLab mode="beginner" step={1} />);
+    expect(screen.getByText("Organized delivery")).toBeInTheDocument();
+    expect(screen.getByText("Scattered delivery")).toBeInTheDocument();
+    expect(screen.getByText("1 delivery")).toBeInTheDocument();
+    expect(screen.getByText("8 deliveries")).toBeInTheDocument();
+
+    rerender(<CoalescingLab mode="beginner" step={3} />);
+    expect(screen.getByText("1 HBM delivery")).toBeInTheDocument();
+    expect(screen.getByText("4 calculations")).toBeInTheDocument();
+    expect(screen.getByText("3 repeated deliveries avoided")).toBeInTheDocument();
+
+    rerender(
+      <CoalescingLab
+        mode="expert"
+        step={1}
+        inputs={{ pattern: "scattered", stride: 17 }}
+        onInputChange={(key, value) => changes.push([key, value])}
+      />,
+    );
+    expect(screen.getByText("Full warp overlay")).toBeInTheDocument();
+    expect(screen.getByText(/32-byte sectors/)).toBeInTheDocument();
+    expect(screen.getByText("32 transactions")).toBeInTheDocument();
+    expect(screen.getByText("13% useful-byte efficiency")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Tiled reuse" }));
+    expect(changes).toContainEqual(["pattern", "tiled"]);
+  });
+
+  it("derives roofline intensity by comparing the same work with fewer bytes", () => {
+    const inputs = { work: 512, "naive-bytes": 256, "reuse-factor": 4 };
+    const { rerender } = render(
+      <RooflineLab mode="expert" step={0} inputs={inputs} />,
+    );
+    expect(screen.getByText("Same calculation, two data plans")).toBeInTheDocument();
+    expect(screen.getByText("512 FLOPs of useful work")).toBeInTheDocument();
+
+    rerender(<RooflineLab mode="expert" step={1} inputs={inputs} />);
+    expect(
+      screen.getByText("512 FLOPs ÷ 256 bytes = 2.00 FLOP/byte"),
+    ).toBeInTheDocument();
+
+    rerender(<RooflineLab mode="expert" step={2} inputs={inputs} />);
+    expect(
+      screen.getByText("512 FLOPs ÷ 64 bytes = 8.00 FLOP/byte"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Work did not change; memory traffic fell 4×.")).toBeInTheDocument();
+
+    rerender(<RooflineLab mode="expert" step={3} inputs={inputs} />);
+    expect(screen.getByText("Naive · 2.00 FLOP/byte")).toBeInTheDocument();
+    expect(screen.getByText("Reuse · 8.00 FLOP/byte")).toBeInTheDocument();
   });
 
   it("reveals divergence configuration, current execution, and final outcome progressively", () => {
