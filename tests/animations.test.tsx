@@ -110,10 +110,15 @@ describe("deterministic animation controls", () => {
     expect(screen.getByText("Complete ✓")).toBeInTheDocument();
 
     rerender(
-      <DivergenceSimulator inputs={{ split: 16, pathA: 5, pathB: 8 }} />,
+      <DivergenceSimulator
+        step={0}
+        inputs={{ split: 20, pathA: 5, pathB: 8 }}
+      />,
     );
-    expect(screen.getAllByText("13").length).toBeGreaterThan(0);
-    expect(screen.getByText(/Both paths issue serially/)).toBeInTheDocument();
+    expect(
+      screen.getByText("No branch decision yet; all 32 lanes move together."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("0 branch-path cycles")).toBeInTheDocument();
   });
 
   it("makes formerly unreachable serving and GPU stages selectable", () => {
@@ -132,6 +137,50 @@ describe("deterministic animation controls", () => {
 
     rerender(<CoalescingLab step={4} inputs={{ pattern: "tiled" }} />);
     expect(screen.getByText(/One coalesced HBM fill/)).toBeInTheDocument();
+  });
+
+  it("reveals divergence configuration, current execution, and final outcome progressively", () => {
+    const inputs = { split: 20, pathA: 5, pathB: 8 };
+    const { rerender } = render(
+      <DivergenceSimulator step={1} inputs={inputs} />,
+    );
+    expect(
+      screen.getByText("20 lanes choose A; 12 choose B. No path has issued yet."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Not measured · decisions only")).toBeInTheDocument();
+
+    rerender(<DivergenceSimulator step={2} inputs={inputs} />);
+    expect(screen.getByText("5 cycles so far")).toBeInTheDocument();
+    expect(screen.getByText("63% during path A")).toBeInTheDocument();
+
+    rerender(<DivergenceSimulator step={3} inputs={inputs} />);
+    expect(screen.getByText("13 cycles so far")).toBeInTheDocument();
+    expect(screen.getByText("38% during path B")).toBeInTheDocument();
+
+    rerender(<DivergenceSimulator step={4} inputs={inputs} />);
+    expect(screen.getByText("13 total branch-path cycles")).toBeInTheDocument();
+    expect(screen.getByText("47% overall")).toBeInTheDocument();
+    expect(
+      screen.getByText("Both paths issued serially; all lanes are together again."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows memory and arithmetic overlapping in the simplified scheduler trace", () => {
+    const { rerender } = render(<SchedulerTraceLab step={2} />);
+    expect(
+      screen.getByText("W0 memory request remains in flight."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("One simplified scheduler partition"),
+    ).toBeInTheDocument();
+
+    rerender(<SchedulerTraceLab step={3} />);
+    expect(
+      screen.getByText("W0 memory request + W1 FP32 arithmetic overlap"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Real SMs may have multiple scheduler partitions/),
+    ).toBeInTheDocument();
   });
 
   it("presents HBM stacks as an illustrative variable-count package layout", () => {

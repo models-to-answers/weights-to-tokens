@@ -287,9 +287,10 @@ export function DivergenceSimulator({
   const split = numeric(inputs, "split", 16);
   const pathA = numeric(inputs, "pathA", 5);
   const pathB = numeric(inputs, "pathB", 8);
+  const pathBThreads = 32 - split;
   const divergent = split > 0 && split < 32;
   const serialCycles = divergent ? pathA + pathB : split === 0 ? pathB : pathA;
-  const useful = ((split * pathA) + ((32 - split) * pathB)) / (32 * Math.max(serialCycles, 1));
+  const useful = ((split * pathA) + (pathBThreads * pathB)) / (32 * Math.max(serialCycles, 1));
   const narration = [
     "All 32 lanes issue the same instruction together.",
     "The branch condition sends some threads to A and the rest to B.",
@@ -297,6 +298,35 @@ export function DivergenceSimulator({
     "The warp executes path B while path-A lanes are masked off.",
     "All lanes meet again and continue on one instruction stream.",
   ] as const;
+  const behavior = [
+    "No branch decision yet; all 32 lanes move together.",
+    `${split} lanes choose A; ${pathBThreads} choose B. No path has issued yet.`,
+    split > 0
+      ? `Path A is issuing; ${pathBThreads} path-B lanes are masked.`
+      : "Path A is skipped because no lanes chose it.",
+    pathBThreads > 0
+      ? `Path B is issuing; ${split} path-A lanes are masked.`
+      : "Path B is skipped because no lanes chose it.",
+    divergent
+      ? "Both paths issued serially; all lanes are together again."
+      : "All lanes took one path and are together again.",
+  ];
+  const pathACycles = split > 0 ? pathA : 0;
+  const pathBCycles = pathBThreads > 0 ? pathB : 0;
+  const cycles = [
+    "0 branch-path cycles",
+    "0 branch-path cycles",
+    pathACycles > 0 ? `${pathACycles} cycles so far` : "0 cycles · path A skipped",
+    `${pathACycles + pathBCycles} cycles so far`,
+    `${serialCycles} total branch-path cycles`,
+  ];
+  const utilization = [
+    "100% now · uniform",
+    "Not measured · decisions only",
+    split > 0 ? `${Math.round((split / 32) * 100)}% during path A` : "Path A skipped",
+    pathBThreads > 0 ? `${Math.round((pathBThreads / 32) * 100)}% during path B` : "Path B skipped",
+    `${Math.round(useful * 100)}% overall`,
+  ];
 
   return (
     <LabFrame
@@ -309,30 +339,31 @@ export function DivergenceSimulator({
         {Array.from({ length: 32 }, (_, index) => {
           const path = index < split ? "a" : "b";
           const masked = active === 2 ? path === "b" : active === 3 ? path === "a" : false;
-          return <i className={`${path === "a" ? "path-a" : "path-b"} ${masked ? "is-masked" : ""}`} key={index}><span>{index}</span><strong>{active === 0 || active === 4 ? "•" : path.toUpperCase()}</strong></i>;
+          const pathClass = active === 0 || active === 4 ? "is-uniform" : path === "a" ? "path-a" : "path-b";
+          return <i className={`${pathClass} ${masked ? "is-masked" : ""}`} key={index}><span>{index}</span><strong>{active === 0 || active === 4 ? "•" : path.toUpperCase()}</strong></i>;
         })}
       </div>
       <div className="branch-execution">
-        <span>Issued work</span>
-        <div className={active >= 2 ? "is-active" : ""}>Path A · {pathA} instructions</div>
-        <div className={active >= 3 ? "is-active" : ""}>Path B · {pathB} instructions</div>
-        <strong>{active === 4 ? `Reconverged after ${serialCycles} issued instruction cycles` : narration[active]}</strong>
+        <span>Scenario setup</span>
+        <div className={active === 2 ? "is-active" : active > 2 ? "is-past" : ""}>Path A · {split} lanes · {pathA} instructions</div>
+        <div className={active === 3 ? "is-active" : active > 3 ? "is-past" : ""}>Path B · {pathBThreads} lanes · {pathB} instructions</div>
+        <strong>{behavior[active]}</strong>
       </div>
       <div className="lab-grid">
         <div className="slider-stack">
           {mode === "expert" ? (
             <>
+              <p className="lab-guidance"><strong>Scenario setup</strong><br />Change the branch split or path lengths, then replay the same five execution stages.</p>
               <Slider label="Threads taking path A" value={split} min={0} max={32} onChange={(value) => onInputChange?.("split", value)} />
               <Slider label="Path A instructions" value={pathA} min={1} max={16} onChange={(value) => onInputChange?.("pathA", value)} />
               <Slider label="Path B instructions" value={pathB} min={1} max={16} onChange={(value) => onInputChange?.("pathB", value)} />
             </>
-          ) : <p className="lab-guidance">{narration[active]}</p>}
+          ) : <p className="lab-guidance">{narration[active]} The scenario stays fixed while the stages reveal what executes.</p>}
         </div>
         <div className="lab-readouts lab-readouts--stack">
-          <div><span>Warp behavior</span><strong>{divergent ? "Both paths issue serially under different masks" : "All lanes agree; only one path issues"}</strong></div>
-          <div><span>Issued cycles</span><strong>{serialCycles}</strong></div>
-          <div><span>Lane utilization</span><strong>{(useful * 100).toFixed(0)}%</strong></div>
-          {mode === "expert" ? <div><span>Reconvergence</span><strong>Execution reconverges at the branch&apos;s post-dominator.</strong></div> : null}
+          <div><span>Issued cycles</span><strong>{cycles[active]}</strong></div>
+          <div><span>Active-lane utilization</span><strong>{utilization[active]}</strong></div>
+          {mode === "expert" ? <div><span>Reconvergence</span><strong>{active === 4 ? "Complete at the branch's post-dominator." : "Not reached yet."}</strong></div> : null}
         </div>
       </div>
     </LabFrame>
@@ -342,12 +373,12 @@ export function DivergenceSimulator({
 const SCHEDULER_STAGES =
   animationStageLabels["animation.inside-gpu.warp-scheduler"];
 const SCHEDULER_TIMELINE = [
-  { issued: "—", w0: "ready · LD", w1: "ready · FP32", w2: "dependency", pipeline: "none", note: "The scoreboard sees two eligible warps." },
-  { issued: "W0 · LD", w0: "issued load", w1: "ready · FP32", w2: "dependency", pipeline: "LD/ST", note: "Warp 0 issues a memory load." },
-  { issued: "—", w0: "memory wait", w1: "ready · FP32", w2: "dependency", pipeline: "none", note: "Warp 0 is resident but temporarily ineligible." },
-  { issued: "W1 · FP32", w0: "memory wait", w1: "issued FP32", w2: "dependency", pipeline: "FP32", note: "The scheduler hides Warp 0's wait by issuing independent Warp 1." },
-  { issued: "return", w0: "ready · ADD", w1: "ready · FP32", w2: "dependency", pipeline: "LD/ST", note: "Warp 0's operands return and its dependency clears." },
-  { issued: "W0 · ADD", w0: "issued ADD", w1: "ready · FP32", w2: "dependency", pipeline: "FP32", note: "Warp 0 becomes eligible and resumes." },
+  { issued: "—", w0: "ready · LD", w1: "ready · FP32", w2: "dependency", pipeline: "none", memory: "No request in flight", compute: "No arithmetic active", overlap: "Two warps are eligible; no instruction has issued.", eligible: "Warp 0 and Warp 1", note: "The scoreboard sees two eligible warps." },
+  { issued: "W0 · LD", w0: "issued load", w1: "ready · FP32", w2: "dependency", pipeline: "LD/ST", memory: "W0 load request sent", compute: "No arithmetic active", overlap: "The load leaves the scheduler and begins its memory journey.", eligible: "Warp 1", note: "Warp 0 issues a memory load." },
+  { issued: "—", w0: "memory wait", w1: "ready · FP32", w2: "dependency", pipeline: "none", memory: "W0 memory request remains in flight.", compute: "FP32 pipeline available", overlap: "Memory request in flight; no arithmetic issued this stage.", eligible: "Warp 1", note: "Warp 0 is resident but temporarily ineligible." },
+  { issued: "W1 · FP32", w0: "memory wait", w1: "issued FP32", w2: "dependency", pipeline: "FP32", memory: "W0 memory request remains in flight.", compute: "W1 FP32 arithmetic active", overlap: "W0 memory request + W1 FP32 arithmetic overlap", eligible: "Warp 1", note: "The scheduler hides Warp 0's wait by issuing independent Warp 1." },
+  { issued: "return", w0: "ready · ADD", w1: "ready · FP32", w2: "dependency", pipeline: "none", memory: "W0 data returns", compute: "W1 FP32 instruction complete", overlap: "The returning data makes Warp 0 eligible again.", eligible: "Warp 0 and Warp 1", note: "Warp 0's operands return and its dependency clears." },
+  { issued: "W0 · ADD", w0: "issued ADD", w1: "ready · FP32", w2: "dependency", pipeline: "FP32", memory: "W0 load complete", compute: "W0 ADD active", overlap: "Warp 0 resumes on the arithmetic pipeline.", eligible: "Warp 1", note: "Warp 0 becomes eligible and resumes." },
 ] as const;
 
 export function SchedulerTraceLab({
@@ -362,10 +393,14 @@ export function SchedulerTraceLab({
   return (
     <LabFrame
       eyebrow="Warp scheduling"
-      title="See a stalled warp skipped and resumed after its data returns"
-      description="Latency hiding does not make memory faster. It keeps execution pipelines useful by issuing independent eligible work while another warp waits."
+      title="Watch one scheduler partition hide a memory wait"
+      description="This trace follows one simplified scheduler partition. A memory request can remain in flight while an independent warp uses an arithmetic pipeline."
     >
       <Tabs labels={SCHEDULER_STAGES} active={active} onChange={(index) => onStepChange?.(index)} />
+      <div className="scheduler-scope">
+        <strong>One simplified scheduler partition</strong>
+        <span>One issue decision is highlighted per stage. Work already sent to memory can continue concurrently.</span>
+      </div>
       <div className="scheduler-story">
         <div className="scheduler-story__warps">
           {warps.map(([name, detail], index) => <div className={detail.includes("issued") ? "is-issued" : detail.includes("wait") || detail.includes("dependency") ? "is-stalled" : "is-ready"} key={name}><span>{name}</span><strong>{detail}</strong><small>{index === 0 ? "load then add" : index === 1 ? "independent arithmetic" : "waiting on prior result"}</small></div>)}
@@ -376,15 +411,22 @@ export function SchedulerTraceLab({
           <p>{state.note}</p>
         </div>
         <div className="scheduler-story__pipelines">
+          <span>New issue this stage</span>
           {["LD/ST", "FP32", "Tensor"].map((pipeline) => <i className={state.pipeline === pipeline ? "is-active" : ""} key={pipeline}>{pipeline}</i>)}
         </div>
+      </div>
+      <div className="scheduler-concurrency" aria-label="Concurrent work in flight">
+        <div className={active >= 1 && active <= 4 ? "is-active" : ""}><span>Memory system</span><strong>{state.memory}</strong></div>
+        <div className={active === 3 || active === 5 ? "is-active" : ""}><span>Arithmetic pipeline</span><strong>{state.compute}</strong></div>
+        <p className={active === 3 ? "is-overlap" : ""}>{state.overlap}</p>
       </div>
       <div className="scheduler-timeline" aria-label="Scheduling events so far">
         {SCHEDULER_TIMELINE.map((event, index) => <i className={index < active ? "is-past" : index === active ? "is-active" : ""} key={index}><span>C{index}</span><strong>{event.issued}</strong></i>)}
       </div>
       <div className="lab-readouts">
         <div><span>Current lesson</span><strong>{state.note}</strong></div>
-        <div><span>Eligible now</span><strong>{active === 2 || active === 3 ? "Warp 1" : active >= 4 ? "Warp 0 and Warp 1" : "Warp 0 and Warp 1"}</strong></div>
+        <div><span>Eligible after this event</span><strong>{state.eligible}</strong></div>
+        <div><span>Real GPU context</span><strong>Real SMs may have multiple scheduler partitions, so different eligible warps can issue to available pipelines in the same cycle.</strong></div>
         {mode === "expert" ? <div><span>Important distinction</span><strong>Residency supplies candidates; scoreboard dependencies and pipeline availability determine eligibility.</strong></div> : null}
       </div>
     </LabFrame>

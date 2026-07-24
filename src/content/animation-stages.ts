@@ -130,8 +130,8 @@ export const animationStageLabels = {
   "animation.inside-gpu.divergence": [
     "Uniform execution",
     "Branch splits",
-    "Masked path A",
-    "Masked path B",
+    "Execute path A (mask B)",
+    "Execute path B (mask A)",
     "Reconverge",
   ],
   "animation.inside-gpu.warp-scheduler": [

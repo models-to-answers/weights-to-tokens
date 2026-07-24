@@ -93,6 +93,14 @@ milestone's acceptance evidence has not been recorded here.
   comparisons, trains a judge, distinguishes RLHF from DPO, and exposes bias.
 - Added a complete response and distinct System/GPU evidence to all twelve
   final-replay stages.
+- Rebuilt the warp-divergence lab so its scenario setup stays separate from
+  current execution: uniform lanes, branch decisions, path-specific masks,
+  cumulative cycles, stage-specific lane utilization, and reconvergence now
+  change together.
+- Rebuilt the warp-scheduler trace around one explicitly simplified scheduler
+  partition. It now distinguishes a newly issued instruction from work already
+  in flight, shows a memory request overlapping independent arithmetic, and
+  explains how real SMs may use multiple scheduler partitions.
 - Enabled GitHub-flavored Markdown tables and removed learner-visible internal
   implementation labels.
 - Completed a Chrome playback audit of all 44 chapter animation projections
@@ -109,10 +117,10 @@ Current validation on 2026-07-24:
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run lint` | Passed |
-| `npm run test:unit` | Passed: 2 files, 23 tests |
+| `npm run test:unit` | Passed: 2 files, 26 tests |
 | `npm run build` | Passed |
-| `npm test` | Passed: 23 unit/component tests, production build, 2 rendered-HTML checks |
-| `npm run test:e2e` | Passed: 22 desktop/mobile Chromium journeys |
+| `npm test` | Passed: 26 unit/component tests, production build, 2 rendered-HTML checks |
+| `npm run test:e2e` | Passed: 24 desktop/mobile Chromium journeys |
 | `git diff --check` | Passed |
 
 Browser coverage confirms every animation stage in both learning modes, Expert

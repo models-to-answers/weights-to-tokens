@@ -1050,13 +1050,18 @@ a:focus-visible {
 
 .warp-lanes-v2 { display: grid; grid-template-columns: repeat(16,1fr); gap: .2rem; padding: 1.25rem; }
 .warp-lanes-v2 i { display: grid; place-items: center; min-height: 2.5rem; border: 1px solid #48615c; color: #c3d5d0; background: #173d38; font: normal .48rem var(--font-geist-mono), monospace; }
+.warp-lanes-v2 i.is-uniform { border-color: #6f9189; background: #19332f; }
 .warp-lanes-v2 i.path-b { background: #3f2d32; }
 .warp-lanes-v2 i.is-masked { opacity: .18; }
 .branch-execution { display: grid; grid-template-columns: 7rem 1fr 1fr; gap: .4rem; align-items: center; margin: 0 1.25rem 1rem; }
 .branch-execution > div { padding: .55rem; border: 1px solid #314744; color: #6f9189; font-size: .63rem; }
 .branch-execution > div.is-active { border-color: #74c9ba; color: #c3d5d0; }
+.branch-execution > div.is-past { border-color: #28766d; color: #8eaaa4; background: #173d38; }
 .branch-execution > strong { grid-column: 1/-1; color: #ffc46f; font-size: .7rem; }
 
+.scheduler-scope { display: flex; align-items: center; gap: .65rem; margin: 1.25rem 1.25rem 0; padding: .7rem; border: 1px solid #48615c; background: #19332f; }
+.scheduler-scope strong { color: #ffc46f; font-size: .68rem; }
+.scheduler-scope span { color: #c3d5d0; font-size: .62rem; }
 .scheduler-story { display: grid; grid-template-columns: 1fr .7fr .7fr; gap: .55rem; padding: 1.25rem; }
 .scheduler-story > div { padding: .7rem; border: 1px solid #314744; background: #0e201e; }
 .scheduler-story__warps { display: grid; gap: .3rem; }
@@ -1069,9 +1074,17 @@ a:focus-visible {
 .scheduler-story__pipelines { display: grid; gap: .3rem; align-content: start; }
 .scheduler-story__pipelines i { display: grid; place-items: center; min-height: 2.8rem; border: 1px solid #314744; color: #6f9189; background: #19332f; font: normal .54rem var(--font-geist-mono), monospace; }
 .scheduler-story__pipelines i.is-active { color: #142a28; border-color: var(--amber); background: var(--amber); }
+.scheduler-concurrency { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin: 0 1.25rem 1rem; }
+.scheduler-concurrency > div { min-height: 4.4rem; padding: .65rem; border: 1px solid #314744; background: #0e201e; }
+.scheduler-concurrency > div.is-active { border-color: #74c9ba; background: #173d38; box-shadow: inset 0 0 18px rgba(116,201,186,.08); }
+.scheduler-concurrency span { display: block; color: #8eaaa4; font: .52rem var(--font-geist-mono), monospace; text-transform: uppercase; }
+.scheduler-concurrency strong { display: block; margin-top: .35rem; color: #c3d5d0; font-size: .66rem; }
+.scheduler-concurrency p { grid-column: 1/-1; margin: 0; padding: .55rem; border: 1px solid #314744; color: #8eaaa4; font-size: .65rem; text-align: center; }
+.scheduler-concurrency p.is-overlap { border-color: var(--amber); color: #ffc46f; background: #2f321d; }
 .scheduler-timeline { display: grid; grid-template-columns: repeat(6,1fr); gap: .25rem; padding: 0 1.25rem 1.25rem; }
 .scheduler-timeline i { display: grid; place-items: center; min-height: 2rem; border: 1px solid #314744; color: #6f9189; font: normal .5rem var(--font-geist-mono), monospace; }
-.scheduler-timeline i.is-selected { color: #142a28; border-color: var(--amber); background: var(--amber); }
+.scheduler-timeline i.is-past { border-color: #28766d; color: #8eaaa4; background: #173d38; }
+.scheduler-timeline i.is-active { color: #142a28; border-color: var(--amber); background: var(--amber); }
 
 .memory-path-v2 { display: grid; grid-template-columns: repeat(4,1fr); gap: .45rem; padding: 1.25rem; }
 .memory-path-v2 > div { min-height: 7rem; padding: .65rem; border: 1px solid #314744; color: #6f9189; background: #0e201e; }
@@ -1237,6 +1250,9 @@ a:focus-visible {
   .anatomy-package__substrate { grid-template-columns: 1fr; }
   .warp-lanes-v2 { grid-template-columns: repeat(8,1fr); }
   .branch-execution { grid-template-columns: 1fr; }
+  .scheduler-scope { align-items: flex-start; flex-direction: column; }
+  .scheduler-story, .scheduler-concurrency { grid-template-columns: 1fr; }
+  .scheduler-concurrency p { grid-column: 1; }
   .judge-flow { grid-template-columns: 1fr; }
   .judge-flow i { transform: rotate(90deg); text-align: center; }
   .scheduler-timeline { grid-template-columns: repeat(3,1fr); }
