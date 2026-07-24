@@ -50,6 +50,33 @@ test("direct chapter route survives reload and exposes MDX, glossary, and source
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Inference on one GPU");
 });
 
+test("single-GPU next-token candidates keep labels, bars, and percentages separated", async ({ page }) => {
+  await page.goto("/learn/single-gpu-inference");
+  await page.locator('[data-hydrated="true"]').waitFor();
+  await page.getByRole("tab", { name: "05 Predict next token" }).click();
+
+  const candidates = page.getByRole("list", { name: "Candidate next tokens" });
+  await expect(candidates).toBeVisible();
+  await expect(candidates.getByRole("listitem")).toHaveCount(4);
+
+  for (const item of await candidates.getByRole("listitem").all()) {
+    const label = item.locator(".logit-choice__token");
+    const bar = item.locator(".logit-choice__bar");
+    const percentage = item.locator(".logit-choice__percentage");
+    const [labelBox, barBox, percentageBox] = await Promise.all([
+      label.boundingBox(),
+      bar.boundingBox(),
+      percentage.boundingBox(),
+    ]);
+
+    expect(labelBox).not.toBeNull();
+    expect(barBox).not.toBeNull();
+    expect(percentageBox).not.toBeNull();
+    expect(barBox!.x - (labelBox!.x + labelBox!.width)).toBeGreaterThanOrEqual(8);
+    expect(percentageBox!.x - (barBox!.x + barBox!.width)).toBeGreaterThanOrEqual(8);
+  }
+});
+
 test("rich labs update and persist their canonical stage and inputs", async ({ page }) => {
   const temperature = page.getByRole("slider", { name: /Temperature/ });
   await temperature.fill("1.2");

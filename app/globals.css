@@ -852,8 +852,63 @@ a:focus-visible {
 .token-pieces, .inference-story__cache { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .65rem; }
 .token-pieces i, .inference-story__cache i { padding: .3rem .4rem; border: 1px solid #48615c; color: #c3d5d0; background: #19332f; font: normal .53rem var(--font-geist-mono), monospace; }
 .inference-story__response { min-height: 2.5rem; margin-top: .65rem; color: white; line-height: 1.5; }
-.logit-choice { display: grid; gap: .25rem; margin-top: .65rem; }
-.logit-choice i { height: .55rem; background: #1c766d; transform-origin: left; }
+.logit-choice {
+  display: grid;
+  gap: .55rem;
+  margin: .8rem 1.25rem 0;
+  padding: .9rem;
+  border: 1px solid #314744;
+  border-radius: .65rem;
+  background: #0e201e;
+}
+.logit-choice header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid #314744;
+}
+.logit-choice header strong { color: white; font-size: .76rem; }
+.logit-choice header span { color: #8eaaa4; font: .58rem var(--font-geist-mono), monospace; }
+.logit-choice > div {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, 6rem) minmax(5rem, 1fr) 3.25rem;
+  gap: .75rem;
+  align-items: center;
+  min-width: 0;
+  padding: .35rem .5rem;
+  border: 1px solid transparent;
+  border-radius: .4rem;
+}
+.logit-choice > div.is-selected {
+  border-color: var(--amber);
+  background: rgba(240,164,58,.08);
+}
+.logit-choice__token {
+  overflow: hidden;
+  color: #dce9e5;
+  font: 650 .7rem var(--font-geist-mono), monospace;
+  text-overflow: ellipsis;
+}
+.logit-choice__bar {
+  display: block;
+  height: .65rem;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #263f3b;
+}
+.logit-choice__bar b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1c766d, #f0a43a);
+  transition: width .35s ease;
+}
+.logit-choice__percentage {
+  color: #ffc46f;
+  font: 650 .7rem var(--font-geist-mono), monospace;
+  text-align: right;
+}
 
 .multi-gpu-story { padding: 1.25rem; }
 .multi-gpu-map__gpus { display: grid; grid-template-columns: repeat(4,1fr); gap: .5rem; }
@@ -1115,6 +1170,9 @@ a:focus-visible {
   .release-matrix, .release-matrix > div { min-width: 34rem; }
   .lora-stage { grid-template-columns: 1fr; }
   .lora-stage > strong { transform: rotate(90deg); text-align: center; }
+  .logit-choice { margin-inline: .75rem; }
+  .logit-choice header { align-items: flex-start; flex-direction: column; gap: .25rem; }
+  .logit-choice > div { grid-template-columns: 4.25rem minmax(3.5rem, 1fr) 2.75rem; gap: .55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

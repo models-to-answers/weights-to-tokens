@@ -327,9 +327,26 @@ export function InferenceRuntimeLab({
         </div>
       </div>
       {(active === 4 || active === 5) ? (
-        <div className="logit-choice">
+        <div className="logit-choice" role="list" aria-label="Candidate next tokens">
+          <header>
+            <strong>Candidate next tokens</strong>
+            <span>Probability after the decoding policy</span>
+          </header>
           {[["GPUs", 62], ["They", 21], ["Modern", 11], ["A", 6]].map(([token, probability], index) => (
-            <div className={active === 5 && index === 0 ? "is-selected" : ""} key={String(token)}><span>{token}</span><i><b style={{ width: `${probability}%` }} /></i><strong>{probability}%</strong></div>
+            <div
+              className={active === 5 && index === 0 ? "is-selected" : ""}
+              key={String(token)}
+              role="listitem"
+            >
+              <span className="logit-choice__token">{token}</span>
+              <i
+                className="logit-choice__bar"
+                aria-hidden="true"
+              >
+                <b style={{ width: `${probability}%` }} />
+              </i>
+              <strong className="logit-choice__percentage">{probability}%</strong>
+            </div>
           ))}
         </div>
       ) : null}
