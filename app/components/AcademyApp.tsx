@@ -306,7 +306,10 @@ export function AcademyApp(props: AcademyAppProps) {
                   academyState.completedBeginnerChapterIds.includes(chapter.id);
                 const expertComplete =
                   academyState.completedExpertChapterIds.includes(chapter.id);
+                const modeComplete =
+                  academyState.mode === "expert" ? expertComplete : complete;
                 const active = activeView === chapter.id;
+                const chapterNumber = `${group.order}.${index + 1}`;
                 return (
                   <a
                     className={[
@@ -321,8 +324,13 @@ export function AcademyApp(props: AcademyAppProps) {
                     }}
                     aria-current={active ? "page" : undefined}
                   >
-                    <span>{expertComplete ? "◆" : complete ? "✓" : String(group.order) + "." + (index + 1)}</span>
-                    {chapter.title}
+                    <span className="chapter-link__number">{chapterNumber}</span>
+                    <span className="chapter-link__title">{chapter.title}</span>
+                    {modeComplete ? (
+                      <span className="chapter-link__status" aria-label="Completed">
+                        ✓
+                      </span>
+                    ) : null}
                   </a>
                 );
               })}
@@ -342,8 +350,15 @@ export function AcademyApp(props: AcademyAppProps) {
               }}
               aria-current={activeView === "replay" ? "page" : undefined}
             >
-              <span>{academyState.finalReplayCompleted ? "✓" : "R"}</span>
-              Replay the full journey
+              <span className="chapter-link__number">R</span>
+              <span className="chapter-link__title">Replay the full journey</span>
+              {(academyState.mode === "expert"
+                ? academyState.finalReplayExpertCompleted
+                : academyState.finalReplayCompleted) ? (
+                <span className="chapter-link__status" aria-label="Completed">
+                  ✓
+                </span>
+              ) : null}
             </a>
           </section>
         </nav>

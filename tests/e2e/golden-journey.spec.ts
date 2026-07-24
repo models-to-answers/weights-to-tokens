@@ -23,6 +23,12 @@ test("learner can use canonical content, answer, continue, and reload progress",
   await page.locator('[data-hydrated="true"]').waitFor();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("How training changes weights");
   await expect(page.getByText("Expert layer").first()).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "1.1 What a model carries Completed", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "1.2 How training changes weights", exact: true }),
+  ).toBeVisible();
   await expect(page.getByLabel(/complete$/)).toContainText("8%");
   await expect(page.getByLabel(/complete$/)).toContainText("Expert 1/13");
 });

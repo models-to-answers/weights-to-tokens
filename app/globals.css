@@ -127,7 +127,7 @@ a:focus-visible {
 }
 .chapter-link:hover { background: rgba(255,255,255,.07); }
 .chapter-link--active { color: white; background: rgba(255,255,255,.11); }
-.chapter-link > span {
+.chapter-link__number {
   display: grid;
   place-items: center;
   width: 1.55rem;
@@ -138,7 +138,23 @@ a:focus-visible {
   background: #cfe5dc;
   font: 750 .62rem var(--font-geist-mono), monospace;
 }
-.chapter-link--active > span { background: var(--amber); }
+.chapter-link__title {
+  min-width: 0;
+  flex: 1;
+}
+.chapter-link__status {
+  display: grid;
+  place-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+  border: 1px solid #9ed8cb;
+  border-radius: 50%;
+  color: var(--navy);
+  background: #9ed8cb;
+  font: 800 .68rem var(--font-geist-mono), monospace;
+}
+.chapter-link--active .chapter-link__number { background: var(--amber); }
 
 .reset-zone {
   margin-top: 1.5rem;
