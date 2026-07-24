@@ -1,6 +1,6 @@
 # Progress and Handoff
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
 
 ## Current status
 
@@ -9,11 +9,11 @@ reviewed. The user approved the repository, architecture, source-migration,
 runtime, testing, visual-system, golden-journey, and milestone decisions now
 captured in `docs/decisions.md`.
 
-The first-release implementation is now a validated release candidate in the
-repository. A previous “complete” claim was withdrawn after user review exposed
-material source-coverage and animation-depth gaps. The release contract is now
-the one-to-one matrix in `docs/migration-matrix.md`, and every retained row is
-implemented and tested.
+The first-release implementation is a validated migration-integrity release
+candidate. A
+previous “complete” claim was withdrawn after user review exposed material
+source-coverage and animation-depth gaps. The release contract is now the
+one-to-one matrix plus `docs/curriculum-audit.md`.
 
 ## Milestone map
 
@@ -41,7 +41,7 @@ milestone's acceptance evidence has not been recorded here.
 - Pinned source baselines and established a per-item provenance process.
 - Replaced the starter preview and optional database example with a frontend-only
   academy shell.
-- Added a 12-chapter typed catalog, 12 globally unique questions, 23 animation
+- Added a 12-chapter typed catalog, 24 globally unique questions, 23 animation
   definitions, and 12 replay-stage definitions with reference validation.
 - Added one MDX narrative for every chapter and rendered them through a typed
   chapter-to-component registry.
@@ -68,20 +68,33 @@ milestone's acceptance evidence has not been recorded here.
 - Added Vitest, React Testing Library, rendered production HTML, and Playwright
   desktop/mobile tests, including automated accessibility checks.
 - Added and wired a 1200×630 social preview image.
+- Restored the source teaching that had been compressed: four model-building
+  stages, four business-adaptation paths with examples, temperature, parameter
+  economics, training scale, preference learning, fine-tuning methods, and
+  open/closed model decisions.
+- Added inline Expert depth throughout all three parts while keeping Core a
+  complete plain-language path that may be taken alone.
+- Added a Core check and a distinct Expert challenge to every chapter.
+- Added version-two browser-local state with separate Core and Expert chapter
+  and replay completion. Version-one Core progress migrates without inventing
+  Expert mastery.
+- Replaced misleading Model/GPU/Decision example labels, explained temperature,
+  clarified the journey overview, and aligned its runtime with all twelve
+  displayed stages.
+- Added the evidence-based reconciliation in `docs/curriculum-audit.md`.
 
 ## Validation record
 
-Validated on 2026-07-23 in the pre-commit worktree after the source-coverage
-correction:
+Current validation on 2026-07-24:
 
 | Command | Result |
 | --- | --- |
 | `npm run typecheck` | Passed |
 | `npm run lint` | Passed |
-| `npm run test:unit` | Passed: 2 files, 14 tests |
+| `npm run test:unit` | Passed: 2 files, 20 tests |
 | `npm run build` | Passed |
-| `npm test` | Passed: 14 unit tests, production build, 2 rendered-HTML checks |
-| `npm run test:e2e` | Passed: 16 desktop/mobile Chromium journeys |
+| `npm test` | Passed: 20 unit/component tests, production build, 2 rendered-HTML checks |
+| `npm run test:e2e` | Passed: 18 desktop/mobile Chromium journeys |
 | `git diff --check` | Passed |
 
 Browser coverage confirms Expert disclosure, animation stepping, correct answer
@@ -95,9 +108,7 @@ navigation region.
 
 ## Next recommended work
 
-The next step is user validation of the release candidate. Further practice
-questions, scenarios, or visual refinements are post-v1 enhancements rather
-than missing source migrations.
+User validation is the next step. The two-axis standards/spec review is clear.
 
 ## Open questions
 

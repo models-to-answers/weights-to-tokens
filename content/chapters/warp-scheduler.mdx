@@ -22,4 +22,25 @@ substantial work.
 
 <InteractionSlot animationId="animation.inside-gpu.warp-scheduler" />
 
+<ExpertOnly>
+
+### Eligibility, issue, and the resource triangle
+
+The scoreboard tracks whether operands are ready. A scheduler selects among
+eligible resident warps and issues an instruction to a compatible available
+pipeline. A memory instruction calculates addresses and enters the load/store
+path; its warp remains unavailable until dependencies resolve while other
+warps may issue.
+
+Registers per thread, shared memory per block, and threads per block jointly
+limit residency. Higher occupancy can provide more candidates for latency
+hiding, but it can also force smaller tiles or more spills. The goal is
+measured throughput, not maximum occupancy as an isolated number.
+
+Preemption and fairness policies vary by architecture and runtime. The durable
+model is that scheduling interleaves eligible warp instructions; it does not
+make a stalled instruction complete faster.
+
+</ExpertOnly>
+
 <ChapterCheck />

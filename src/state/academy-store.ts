@@ -17,7 +17,7 @@ import {
   replayStageRegistry,
 } from "../content/catalog";
 
-export const ACADEMY_STATE_VERSION = 1;
+export const ACADEMY_STATE_VERSION = 2;
 export const ACADEMY_STORAGE_KEY = "from-weights-to-tokens:progress";
 
 export interface QuestionAttempt {
@@ -30,6 +30,7 @@ export interface AcademyState {
   schemaVersion: typeof ACADEMY_STATE_VERSION;
   mode: LearningMode;
   completedBeginnerChapterIds: readonly ChapterId[];
+  completedExpertChapterIds: readonly ChapterId[];
   exploredExpertChapterIds: readonly ChapterId[];
   questionAttempts: Readonly<
     Partial<Record<QuestionId, readonly QuestionAttempt[]>>
@@ -39,11 +40,13 @@ export interface AcademyState {
   >;
   completedReplayStageIds: readonly ReplayStageId[];
   finalReplayCompleted: boolean;
+  finalReplayExpertCompleted: boolean;
 }
 
 export type AcademyAction =
   | { type: "SET_MODE"; mode: LearningMode }
   | { type: "COMPLETE_BEGINNER_CHAPTER"; chapterId: ChapterId }
+  | { type: "COMPLETE_EXPERT_CHAPTER"; chapterId: ChapterId }
   | { type: "MARK_EXPERT_EXPLORED"; chapterId: ChapterId }
   | {
       type: "RECORD_QUESTION_ATTEMPT";
@@ -55,7 +58,7 @@ export type AcademyAction =
       animation: DeterministicAnimationState;
     }
   | { type: "COMPLETE_REPLAY_STAGE"; stageId: ReplayStageId }
-  | { type: "COMPLETE_FINAL_REPLAY" }
+  | { type: "COMPLETE_FINAL_REPLAY"; mode: LearningMode }
   | { type: "RESET_PROGRESS" }
   | { type: "HYDRATE"; state: AcademyState };
 
@@ -63,11 +66,13 @@ export const initialAcademyState: AcademyState = {
   schemaVersion: ACADEMY_STATE_VERSION,
   mode: "beginner",
   completedBeginnerChapterIds: [],
+  completedExpertChapterIds: [],
   exploredExpertChapterIds: [],
   questionAttempts: {},
   animationStates: {},
   completedReplayStageIds: [],
   finalReplayCompleted: false,
+  finalReplayExpertCompleted: false,
 };
 
 export function academyReducer(
@@ -82,6 +87,18 @@ export function academyReducer(
         ...state,
         completedBeginnerChapterIds: appendUnique(
           state.completedBeginnerChapterIds,
+          action.chapterId,
+        ),
+      };
+    case "COMPLETE_EXPERT_CHAPTER":
+      return {
+        ...state,
+        completedBeginnerChapterIds: appendUnique(
+          state.completedBeginnerChapterIds,
+          action.chapterId,
+        ),
+        completedExpertChapterIds: appendUnique(
+          state.completedExpertChapterIds,
           action.chapterId,
         ),
       };
@@ -121,7 +138,13 @@ export function academyReducer(
         ),
       };
     case "COMPLETE_FINAL_REPLAY":
-      return { ...state, finalReplayCompleted: true };
+      return action.mode === "expert"
+        ? {
+            ...state,
+            finalReplayCompleted: true,
+            finalReplayExpertCompleted: true,
+          }
+        : { ...state, finalReplayCompleted: true };
     case "RESET_PROGRESS":
       return initialAcademyState;
     case "HYDRATE":
@@ -216,18 +239,27 @@ export function migrateAcademyState(value: unknown): AcademyState {
   if (!isRecord(value)) return initialAcademyState;
 
   const version = value.schemaVersion;
-  if (version !== ACADEMY_STATE_VERSION) {
-    // Add explicit migrations here when the schema advances. Unknown data is
-    // deliberately reset instead of risking a broken learning experience.
+  if (version !== 1 && version !== ACADEMY_STATE_VERSION) {
     return initialAcademyState;
   }
+
+  const completedExpertChapterIds = stringArray(
+    value.completedExpertChapterIds,
+  ).filter((id): id is ChapterId => id in chapterRegistry);
+  const completedBeginnerChapterIds = stringArray(
+    value.completedBeginnerChapterIds,
+  ).filter((id): id is ChapterId => id in chapterRegistry);
+  const normalizedCoreChapterIds = completedExpertChapterIds.reduce(
+    (coreIds, chapterId) => appendUnique(coreIds, chapterId),
+    completedBeginnerChapterIds as readonly ChapterId[],
+  );
+  const finalReplayExpertCompleted = value.finalReplayExpertCompleted === true;
 
   return {
     schemaVersion: ACADEMY_STATE_VERSION,
     mode: value.mode === "expert" ? "expert" : "beginner",
-    completedBeginnerChapterIds: stringArray(
-      value.completedBeginnerChapterIds,
-    ).filter((id): id is ChapterId => id in chapterRegistry),
+    completedBeginnerChapterIds: normalizedCoreChapterIds,
+    completedExpertChapterIds,
     exploredExpertChapterIds: stringArray(
       value.exploredExpertChapterIds,
     ).filter((id): id is ChapterId => id in chapterRegistry),
@@ -236,7 +268,9 @@ export function migrateAcademyState(value: unknown): AcademyState {
     completedReplayStageIds: stringArray(
       value.completedReplayStageIds,
     ).filter((id): id is ReplayStageId => id in replayStageRegistry),
-    finalReplayCompleted: value.finalReplayCompleted === true,
+    finalReplayCompleted:
+      value.finalReplayCompleted === true || finalReplayExpertCompleted,
+    finalReplayExpertCompleted,
   };
 }
 

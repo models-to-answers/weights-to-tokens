@@ -13,4 +13,29 @@ the cadence after generation starts. They can have different bottlenecks.
 
 <InteractionSlot animationId="animation.inference-system.prefill-decode" />
 
+## What one decode iteration does
+
+The scheduler selects active sequences. Their latest token IDs enter the model.
+Layers read the fixed weights and the previously cached keys and values.
+The final layer produces logits, the decoding policy selects a token, and the
+new key/value entries are appended. Finished sequences leave; unfinished ones
+return for another iteration.
+
+<ExpertOnly>
+
+### Capacity and performance
+
+Prefill processes many prompt positions and is often compute-intensive. Decode
+processes one new position per sequence and repeatedly streams weights and
+cache state, so it is frequently memory-bandwidth sensitive. KV-cache capacity
+grows with active sequences, context length, layers, key/value heads, head
+dimension, and numeric precision. Paged allocation reduces fragmentation but
+does not remove the underlying capacity cost.
+
+Time to first token combines queueing, tokenization, scheduling, and prefill.
+Time per output token reflects iterative decode. Throughput can improve while
+one or both latency measures worsen, so all three should be evaluated.
+
+</ExpertOnly>
+
 <ChapterCheck />

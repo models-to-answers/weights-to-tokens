@@ -14,4 +14,25 @@ one model execution.
 
 <InteractionSlot animationId="animation.inference-system.multi-gpu" />
 
+<ExpertOnly>
+
+### Parallelism is a placement decision with a communication bill
+
+Tensor parallelism shards matrix operations and typically requires collectives
+inside every layer. Pipeline parallelism places layer ranges on different
+devices and trades communication for pipeline bubbles and scheduling
+complexity. Expert parallelism routes tokens to selected experts and can create
+load imbalance. Data-parallel replicas communicate little while serving
+independent requests, but each replica must fit a complete serving copy.
+
+Topology matters: communication within a high-bandwidth GPU fabric differs
+from crossing host or rack boundaries. Collective latency becomes part of
+every cooperative token step, so adding devices can reduce usable capacity or
+latency if the model already fits efficiently on one GPU.
+
+KV-cache ownership must follow the ranks that consume it. Moving a request to
+another worker can lose locality or require expensive cache transfer.
+
+</ExpertOnly>
+
 <ChapterCheck />

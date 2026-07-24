@@ -13,4 +13,23 @@ boundary determines when another operation must wait for its results.
 
 <InteractionSlot animationId="animation.inside-gpu.kernel-launch" />
 
+<ExpertOnly>
+
+### Build time and run time are different pipelines
+
+CUDA device code can compile to PTX, a virtual instruction form, and then to
+architecture-specific machine instructions ahead of time or through driver
+JIT. At runtime, the host packs arguments and launch geometry into a stream
+command. The front end consumes the command, block-dispatch logic admits
+blocks, threads become warps, and eligible instructions issue until all blocks
+retire.
+
+Launch is enqueue, not an ordinary synchronous function call. Small kernels can
+spend a material fraction of their time in launch overhead; graphs, fusion, and
+persistent work patterns can reduce repeated submission cost. Synchronization,
+events, dependencies, or transfers determine when the host or another stream
+must observe completion.
+
+</ExpertOnly>
+
 <ChapterCheck />

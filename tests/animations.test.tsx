@@ -73,7 +73,7 @@ describe("deterministic animation controls", () => {
       target: { value: "1.2" },
     });
     expect(changes).toContainEqual(["temperature", 1.2]);
-    fireEvent.keyDown(screen.getByRole("tab", { name: "01 Model" }), {
+    fireEvent.keyDown(screen.getByRole("tab", { name: "01 Example 1" }), {
       key: "ArrowRight",
     });
     expect(steps).toEqual([1]);

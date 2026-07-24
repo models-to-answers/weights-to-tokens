@@ -25,7 +25,7 @@ test("server-renders the academy shell", async () => {
   assert.match(html, /multi-GPU execution/i);
   assert.match(html, /Beginner/);
   assert.match(html, /Expert/);
-  assert.match(html, /saved in this browser/i);
+  assert.match(html, /saved only in this browser/i);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
 

@@ -9,6 +9,10 @@ can improve throughput, but waiting too long increases user-visible latency.
 Continuous batching revisits this decision as active sequences finish and new
 requests arrive.
 
+One useful separation is **control plane versus data plane**. Configuration,
+placement, health, and policy prepare the service. The admitted prompt and its
+generated tokens are the request’s active data path.
+
 This chapter intentionally stops at the inference boundary; it is not a
 packet-networking course.
 
@@ -22,5 +26,22 @@ virtual machines. Those layers change placement, isolation, health checks, and
 the path to a usable device. They do not change the model's token computation.
 
 <InteractionSlot animationId="animation.inference-system.compute-platform" />
+
+<ExpertOnly>
+
+### What the platform changes
+
+Bare metal removes a guest boundary but still includes firmware, drivers, the
+host kernel, processes, security policy, storage, and device topology. A VM
+adds virtual hardware and may expose a GPU through passthrough or mediated
+virtualization. Kubernetes adds scheduling, readiness, resource requests,
+device discovery, and restart behavior; its nodes may themselves be VMs.
+
+Admission policies may account for queue delay, request priority, prompt
+length, predicted output length, cache locality, and service-level objectives.
+Continuous batching makes these decisions at iteration boundaries rather than
+waiting for a fixed batch to finish.
+
+</ExpertOnly>
 
 <ChapterCheck />

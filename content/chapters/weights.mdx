@@ -1,35 +1,83 @@
-## Architecture, weights, and tokens
+## What a model actually is
 
-The architecture describes the operations and connections in the model. The
-weights are the learned numeric settings used by those operations. A tokenizer
-is the translation layer between human text and the token IDs the model reads
-and predicts.
+A model is a fixed architecture plus a very large collection of learned
+numbers called **weights** or **parameters**. Text is split into tokens and
+converted to token IDs. The architecture repeatedly combines those IDs with
+the weights and produces scores for the token that could come next.
 
-A checkpoint stores weight tensors and enough metadata to reconstruct them. It
-is an artifact, not a running service: serving software still has to load it,
-allocate memory, and execute compatible operations.
+It is not a database of memorized sentences and it does not contain handwritten
+rules for every answer. Its capability comes from learning patterns that make
+next-token prediction accurate across many kinds of text.
 
-During inference, the trained weights remain fixed. The runtime reads them
-repeatedly while producing each next-token prediction.
+## One prediction at a time
 
-### What the model actually does
-
-An autoregressive model repeatedly computes a distribution over its vocabulary,
-selects a token, appends it, and runs again. Capability comes from learning
-enough structure to make that apparently simple prediction well.
+The model produces a distribution over its vocabulary. A decoding policy
+selects one candidate, appends it to the context, and runs the model again.
+That loop is how a response grows.
 
 <InteractionSlot animationId="animation.model-factory.token-predictor" />
 
-### Where the billions come from
+Temperature does not make the model more knowledgeable. It reshapes the choice:
+lower values concentrate probability on leading candidates; higher values
+spread probability across more candidates. The three tabs above are simply
+different sentence examples—not different model or GPU modes.
 
-Depth grows parameter count roughly linearly. Width appears inside square
-projection matrices and grows it much faster. Vocabulary embeddings matter
-most for smaller models, while feed-forward blocks dominate many dense large
-models.
+<ExpertOnly>
+
+### From logits to a selected token
+
+The final layer emits logits over the vocabulary. Softmax converts them into
+probabilities. Temperature divides the logits before softmax: values below one
+sharpen the distribution and values above one flatten it. Top-k keeps only the
+k highest candidates; top-p keeps the smallest candidate set whose cumulative
+probability reaches p. Pin these settings when comparing model quality.
+
+</ExpertOnly>
+
+## Architecture, weights, checkpoint, and context
+
+- **Architecture** defines the operations and connections.
+- **Weights** are the learned numeric settings used by those operations.
+- **Checkpoint** stores weight tensors and reconstruction metadata.
+- **Tokenizer** maps text fragments to and from token IDs.
+- **Context window** is the text supplied for the current computation; it is
+  not permanent memory.
+
+During ordinary inference, the weights remain fixed. The system repeatedly
+reads them; it does not learn from the conversation unless another process
+later trains or adapts the model.
+
+## Where billions of parameters come from
+
+Depth adds layers roughly linearly. Width appears in square projection
+matrices, so increasing width grows parameters much faster. Vocabulary
+embeddings matter proportionally more in small models, while feed-forward
+blocks occupy a large share of many dense large models.
 
 <InteractionSlot animationId="animation.model-factory.parameter-builder" />
 
-### Keep the whole journey visible
+<ExpertOnly>
+
+### Count, precision, and active parameters
+
+For a simplified dense decoder with layers L, width d, vocabulary V, and
+feed-forward multiplier m:
+
+`P ≈ Vd + L(4d² + 2md²)`
+
+A rough 16-bit serving footprint is two bytes per parameter before
+quantization metadata and runtime buffers. Training additionally carries
+gradients, optimizer state, activations, and often a full-precision master
+copy. In mixture-of-experts models, total parameters determine storage while
+active parameters better approximate per-token compute.
+
+</ExpertOnly>
+
+## Keep the three levels connected
+
+The orientation map is not another inference animation. It shows where the
+current lesson sits across model creation, inference-system preparation, and
+GPU execution. The final replay later runs one prompt through the same stages.
 
 <InteractionSlot animationId="animation.model-factory.weights-map" />
 

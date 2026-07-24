@@ -1,24 +1,44 @@
 ## Package what serving needs
 
-A deployable model artifact normally contains weight shards, architecture
-configuration, tokenizer assets, numeric-format information, and a manifest
-that ties the pieces to one immutable version.
+A deployable model normally contains weight shards, architecture configuration,
+tokenizer assets, numeric-format information, and an immutable manifest tying
+the pieces to one version. Integrity and compatibility checks prevent a partial
+or mixed release from being marked ready.
 
-Compatibility matters. The serving runtime must understand the tensor names,
-shapes, precision, quantization metadata, and model operations represented by
-the artifact. Integrity checks prevent a partial or mixed-version load from
-silently becoming a ready worker.
+The artifact is the handoff between the model factory and the inference system.
 
-The artifact is the handoff between the model factory and the inference
-system.
+## Open, closed, and what is actually released
 
-### Open and closed are artifact-and-rights choices
-
-An API may expose only a service. An open-weights release supplies parameter
-files but usually withholds the training data and recipe. Owning weights also
-means owning quantization, batching, KV-cache management, scaling, evaluation,
-and version lifecycle.
+- **Closed service:** the provider exposes an API; the weights remain private.
+- **Open weights:** the parameter files can be downloaded, but the original
+  data and complete training recipe may remain private.
+- **Open-ish:** weights are available under use, scale, or redistribution
+  restrictions.
+- **Reproducibly open:** weights, code, recipe, and usable data provenance are
+  available under compatible rights.
 
 <InteractionSlot animationId="animation.model-factory.artifact-packaging" />
+
+Owning weights buys control, permanence, and modification. It also makes
+quantization, batching, KV-cache management, scaling, evaluation, security, and
+version lifecycle your responsibility. “Free to download” does not mean free
+to operate.
+
+<ExpertOnly>
+
+### What to evaluate before choosing
+
+Check data residency, licensing, derivative-output restrictions, scale
+thresholds, acceptable-use terms, provenance, indemnity, expected request
+volume, peak capacity, staffing, and rollback requirements. Closed APIs often
+win at low or irregular volume; self-hosted weights can win when control,
+residency, customization, or high sustained volume dominates.
+
+At load time, the runtime must understand tensor names, shapes, layouts,
+precision, quantization scales, tokenizer IDs, and required operators.
+Checksums establish integrity; a manifest establishes that the parts belong
+together.
+
+</ExpertOnly>
 
 <ChapterCheck />

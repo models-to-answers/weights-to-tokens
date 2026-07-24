@@ -1,49 +1,105 @@
-## One training step
+## How a model gets built
 
-A batch of examples enters the model in the forward pass. The model produces a
-prediction, and a loss function measures how far that prediction is from the
-desired result.
+“Training” often hides four different stages. They use different data, produce
+different improvements, and differ enormously in cost.
 
-Backpropagation follows the recorded computation in reverse to calculate how
-each trainable weight contributed to the loss. An optimizer then applies a
-small update. Repeating this process across many batches creates the learned
-weights used later by inference.
+1. **Pretraining** reads a very large corpus and learns broad language and
+   world patterns through next-token prediction.
+2. **Supervised tuning** uses prompt-and-answer examples to teach useful
+   instruction-following behavior.
+3. **Preference training** uses comparisons or feedback to favor more helpful,
+   safe, or honest responses.
+4. **Evaluation and release** tests the candidate, chooses a version, and
+   packages a deployable artifact.
 
-Training therefore stores activations, gradients, and optimizer state that
-ordinary inference does not need.
-
-### The model-building pipeline
-
-Pretraining creates broad capability and usually consumes nearly all of the
-compute. Supervised tuning teaches instruction-following. Preference training
-shapes which answers the model tends to produce. Evaluation decides whether the
-result is safe and useful enough to release.
+As an example, a customer-support model may begin with general language ability,
+learn how good support answers are structured, learn that admitting uncertainty
+is preferable to inventing a policy, and finally pass policy, safety, and
+quality gates before release.
 
 <InteractionSlot animationId="animation.model-factory.pipeline-stages" />
 
-### Turn scale into time and money
+Pretraining usually dominates compute, but post-training often determines much
+of the behavior users notice. That is why “train our own model” is not a useful
+plan until the intended stage is named.
 
-Training work grows with parameter count and training tokens. More GPUs reduce
-elapsed time only to the extent that communication, input pipelines, and
-utilization allow them to. The bill can be estimated; quality still depends on
-data and engineering decisions.
+<ExpertOnly>
+
+### What changes across the four stages
+
+Pretraining updates essentially all weights from self-supervised token loss.
+Supervised tuning uses curated target responses. Preference methods may train a
+reward signal and optimize against it, or optimize preference pairs directly.
+Evaluation should include capability, safety, robustness, data-contamination,
+and product-specific tests. Modern reasoning systems can spend materially more
+on post-training than older indicative stage splits suggest.
+
+</ExpertOnly>
+
+## One weight-update step
+
+A batch enters the forward pass. The model predicts, loss measures the error,
+backpropagation computes gradients, and an optimizer applies a small update.
+Repeating this across many batches creates the learned weights.
 
 <InteractionSlot animationId="animation.model-factory.training-loop" />
 
-### Hand the result from training to serving
+The animation also shows distributed training: workers calculate local
+gradients, synchronize them, update consistently, and periodically write a
+checkpoint. Adding GPUs reduces elapsed time only while communication, input
+delivery, synchronization, and utilization remain efficient.
 
-A distributed checkpoint is not automatically a release. Training ranks first
-write consistent parameter and optimizer state. A publication job selects the
-serving weights, converts or shards them into the target format, attaches
-configuration and tokenizer assets, verifies integrity, and publishes an
-immutable artifact version. Inference workers load that version; they do not
-mount a live training process.
+<ExpertOnly>
 
-### Preference signals are not truth
+### Turn scale into time and memory
 
-Human or AI comparisons can train a reward model, but optimizing a proxy can
-amplify whatever raters reward—including agreeableness over accuracy.
+A useful dense-transformer estimate is `C ≈ 6ND`, where N is parameter count
+and D is training tokens. Divide by achieved—not brochure—throughput to estimate
+time. Training memory exceeds serving memory because it may include weights,
+gradients, optimizer moments, master weights, and saved activations.
+
+Scaling laws make model size and data volume a joint decision. Too little data
+undertrains a large model; too small a model cannot use an enormous corpus
+efficiently. Synthetic data can expand supply but may reproduce the generating
+model’s blind spots.
+
+</ExpertOnly>
+
+## Teaching judgement
+
+Supervised examples show what an answer looks like. Preference data compares
+alternatives and teaches what “better” means. Feedback is a proxy, not truth:
+raters may reward confidence, agreeableness, or style instead of correctness.
 
 <InteractionSlot animationId="animation.model-factory.preference-trainer" />
+
+<ExpertOnly>
+
+RLHF can train a reward model and then optimize a policy while constraining it
+from drifting too far from the reference model. Direct preference optimization
+removes the separate reward-model/RL loop and learns directly from preference
+pairs. Both require careful evaluation for reward hacking and distribution
+shift.
+
+Preference optimization can also impose an **alignment tax**: improving the
+measured preference objective may reduce other capabilities, diversity, or
+calibration. The constraint to the reference model limits drift but does not
+prove that the proxy captures truth, safety, or the product’s real goal.
+
+Evaluation is therefore the central post-training system, not a final ceremony.
+Track product-task success, truthfulness, refusal quality, regressions, subgroup
+behavior, adversarial cases, and general-capability retention. Product and
+domain teams can contribute high-value examples and rubrics without operating
+the optimization stack themselves; the technical pipeline should make those
+judgements versioned, reviewable, and reproducible.
+
+</ExpertOnly>
+
+## From checkpoint to release
+
+Training ranks write consistent state. A publication job selects serving
+weights, converts and shards them, attaches the architecture and tokenizer,
+verifies integrity, and publishes an immutable version. Inference loads that
+version; it does not attach to the live training job.
 
 <ChapterCheck />

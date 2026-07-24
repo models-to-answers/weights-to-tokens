@@ -8,6 +8,7 @@ import type {
   AnimationDefinition,
   ReplayStageDefinition,
 } from "../domain/animation";
+import { journeyStageLabels } from "./journey";
 
 export const parts = [
   {
@@ -102,7 +103,7 @@ export const chapters = [
       "animation.model-factory.token-predictor",
       "animation.model-factory.parameter-builder",
     ],
-    questionIds: ["question.model-factory.weights.01"],
+    questionIds: ["question.model-factory.weights.01", "question.model-factory.weights.02"],
     glossaryIds: ["glossary.parameter", "glossary.checkpoint"],
     sourceIds: ["source.hf-models"],
     replayStageIds: ["replay.weights-created"],
@@ -155,7 +156,7 @@ export const chapters = [
       "animation.model-factory.training-loop",
       "animation.model-factory.preference-trainer",
     ],
-    questionIds: ["question.model-factory.training.01"],
+    questionIds: ["question.model-factory.training.01", "question.model-factory.training.02"],
     glossaryIds: ["glossary.parameter", "glossary.gradient"],
     sourceIds: ["source.pytorch-autograd"],
     replayStageIds: ["replay.weights-created"],
@@ -198,7 +199,7 @@ export const chapters = [
       "animation.model-factory.adaptation-lab",
       "animation.model-factory.fine-tune-methods",
     ],
-    questionIds: ["question.model-factory.adaptation.01"],
+    questionIds: ["question.model-factory.adaptation.01", "question.model-factory.adaptation.02"],
     glossaryIds: ["glossary.lora"],
     sourceIds: ["source.hf-peft"],
     replayStageIds: [],
@@ -242,7 +243,7 @@ export const chapters = [
     },
     content: () => import("../../content/chapters/model-artifact.mdx"),
     animationIds: ["animation.model-factory.artifact-packaging"],
-    questionIds: ["question.model-factory.artifact.01"],
+    questionIds: ["question.model-factory.artifact.01", "question.model-factory.artifact.02"],
     glossaryIds: ["glossary.checkpoint", "glossary.tokenizer", "glossary.artifact"],
     sourceIds: ["source.hf-models", "source.hf-tokenizer"],
     replayStageIds: ["replay.artifact-stored"],
@@ -284,7 +285,7 @@ export const chapters = [
       "animation.inference-system.request-arrival",
       "animation.inference-system.compute-platform",
     ],
-    questionIds: ["question.inference-system.arrival.01"],
+    questionIds: ["question.inference-system.arrival.01", "question.inference-system.arrival.02"],
     glossaryIds: ["glossary.tokenizer", "glossary.admission"],
     sourceIds: ["source.hf-tokenizer", "source.triton-batcher"],
     replayStageIds: ["replay.request-arrives"],
@@ -327,7 +328,7 @@ export const chapters = [
       "animation.inference-system.model-locality",
       "animation.inference-system.model-loading",
     ],
-    questionIds: ["question.inference-system.readiness.01"],
+    questionIds: ["question.inference-system.readiness.01", "question.inference-system.readiness.02"],
     glossaryIds: ["glossary.artifact"],
     sourceIds: ["source.hf-models", "source.triton-warmup"],
     replayStageIds: ["replay.model-loaded"],
@@ -372,7 +373,7 @@ export const chapters = [
     },
     content: () => import("../../content/chapters/single-gpu-inference.mdx"),
     animationIds: ["animation.inference-system.prefill-decode"],
-    questionIds: ["question.inference-system.single-gpu.01"],
+    questionIds: ["question.inference-system.single-gpu.01", "question.inference-system.single-gpu.02"],
     glossaryIds: ["glossary.tokenizer", "glossary.kv-cache"],
     sourceIds: ["source.hf-tokenizer", "source.hf-kv-cache", "source.triton-batcher"],
     replayStageIds: [
@@ -420,7 +421,7 @@ export const chapters = [
     },
     content: () => import("../../content/chapters/multi-gpu-inference.mdx"),
     animationIds: ["animation.inference-system.multi-gpu"],
-    questionIds: ["question.inference-system.multi-gpu.01"],
+    questionIds: ["question.inference-system.multi-gpu.01", "question.inference-system.multi-gpu.02"],
     glossaryIds: ["glossary.tensor-parallel"],
     sourceIds: ["source.pytorch-tp"],
     replayStageIds: [],
@@ -457,7 +458,7 @@ export const chapters = [
       "animation.inside-gpu.throughput-silicon",
       "animation.inside-gpu.zoom-anatomy",
     ],
-    questionIds: ["question.inside-gpu.anatomy.01"],
+    questionIds: ["question.inside-gpu.anatomy.01", "question.inside-gpu.anatomy.02"],
     glossaryIds: ["glossary.sm"],
     sourceIds: ["source.cuda-model"],
     replayStageIds: ["replay.gpu-zoom"],
@@ -491,7 +492,7 @@ export const chapters = [
     },
     content: () => import("../../content/chapters/kernel-launch.mdx"),
     animationIds: ["animation.inside-gpu.kernel-launch"],
-    questionIds: ["question.inside-gpu.kernel-launch.01"],
+    questionIds: ["question.inside-gpu.kernel-launch.01", "question.inside-gpu.kernel-launch.02"],
     glossaryIds: ["glossary.sm", "glossary.warp"],
     sourceIds: ["source.cuda-model"],
     replayStageIds: ["replay.kernel-launched"],
@@ -528,7 +529,7 @@ export const chapters = [
       "animation.inside-gpu.divergence",
       "animation.inside-gpu.warp-scheduler",
     ],
-    questionIds: ["question.inside-gpu.warp-scheduler.01"],
+    questionIds: ["question.inside-gpu.warp-scheduler.01", "question.inside-gpu.warp-scheduler.02"],
     glossaryIds: ["glossary.warp"],
     sourceIds: ["source.cuda-model"],
     replayStageIds: ["replay.warps-scheduled"],
@@ -565,7 +566,7 @@ export const chapters = [
       "animation.inside-gpu.coalesced-memory",
       "animation.inside-gpu.roofline",
     ],
-    questionIds: ["question.inside-gpu.memory.01"],
+    questionIds: ["question.inside-gpu.memory.01", "question.inside-gpu.memory.02"],
     glossaryIds: ["glossary.coalescing"],
     sourceIds: ["source.cuda-memory"],
     replayStageIds: ["replay.memory-served"],
@@ -578,7 +579,7 @@ const choice = (
   label: string,
 ): { id: string; label: string } => ({ id, label });
 
-export const questions = [
+const coreQuestions = [
   {
     id: "question.model-factory.weights.01",
     chapterId: "chapter.model-factory.weights",
@@ -749,6 +750,182 @@ export const questions = [
   },
 ] as const satisfies readonly MultipleChoiceQuestion[];
 
+const expertQuestions = [
+  {
+    id: "question.model-factory.weights.02",
+    chapterId: "chapter.model-factory.weights",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why does lowering temperature make a token distribution more concentrated?",
+    choices: [
+      choice("a", "It increases the relative separation between logits before softmax."),
+      choice("b", "It retrains the highest-probability weight."),
+      choice("c", "It removes the tokenizer vocabulary."),
+    ],
+    correctChoiceId: "a",
+    explanation: "Dividing logits by a value below one magnifies their differences, so softmax places more mass on the leaders.",
+  },
+  {
+    id: "question.model-factory.training.02",
+    chapterId: "chapter.model-factory.training",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why can doubling the GPU count fail to halve training time?",
+    choices: [
+      choice("a", "Communication, input, and synchronization overheads do not scale away."),
+      choice("b", "Every GPU retrains a different tokenizer."),
+      choice("c", "Loss can only be computed on one CPU."),
+    ],
+    correctChoiceId: "a",
+    explanation: "Distributed efficiency is limited by coordination, communication, utilization, and the serial portions of the pipeline.",
+  },
+  {
+    id: "question.model-factory.adaptation.02",
+    chapterId: "chapter.model-factory.adaptation",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "A product catalog changes daily. Which intervention best preserves freshness and rollback?",
+    choices: [
+      choice("a", "Retrieval over a versioned catalog index"),
+      choice("b", "Full fine-tuning every night"),
+      choice("c", "Pretraining a new base model"),
+    ],
+    correctChoiceId: "a",
+    explanation: "Retrieval changes request context rather than weights, so facts can update and roll back with the source index.",
+  },
+  {
+    id: "question.model-factory.artifact.02",
+    chapterId: "chapter.model-factory.artifact",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why should readiness reject a mixed-version set of weight shards and tokenizer files?",
+    choices: [
+      choice("a", "Shape or token-ID incompatibilities can produce invalid execution."),
+      choice("b", "The files would automatically trigger pretraining."),
+      choice("c", "A GPU cannot read more than one file."),
+    ],
+    correctChoiceId: "a",
+    explanation: "An immutable manifest and integrity checks keep every artifact component compatible with one model version.",
+  },
+  {
+    id: "question.inference-system.arrival.02",
+    chapterId: "chapter.inference-system.arrival",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "What is the central trade-off in waiting to form a larger batch?",
+    choices: [
+      choice("a", "Higher throughput versus additional queue latency"),
+      choice("b", "More training data versus fewer weights"),
+      choice("c", "More network headers versus a smaller tokenizer"),
+    ],
+    correctChoiceId: "a",
+    explanation: "Waiting can improve device utilization while directly increasing time before GPU execution begins.",
+  },
+  {
+    id: "question.inference-system.readiness.02",
+    chapterId: "chapter.inference-system.readiness",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why is copying all weights into HBM insufficient to declare a worker ready?",
+    choices: [
+      choice("a", "Pools, kernels, caches, communicators, and representative execution may still be uninitialized."),
+      choice("b", "HBM must first be converted into object storage."),
+      choice("c", "The model must update its weights on every startup."),
+    ],
+    correctChoiceId: "a",
+    explanation: "Readiness represents a usable execution path, not merely byte residency.",
+  },
+  {
+    id: "question.inference-system.single-gpu.02",
+    chapterId: "chapter.inference-system.single-gpu",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why can KV-cache memory cap concurrency even when weights fit?",
+    choices: [
+      choice("a", "Cache capacity grows with active sequences, context length, and model layers."),
+      choice("b", "Each token creates a new model architecture."),
+      choice("c", "Prefill deletes weight shards."),
+    ],
+    correctChoiceId: "a",
+    explanation: "Weights are reused, but every active sequence accumulates layer-wise key and value state.",
+  },
+  {
+    id: "question.inference-system.multi-gpu.02",
+    chapterId: "chapter.inference-system.multi-gpu",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why might four replicas outperform four-way tensor parallelism for many small requests?",
+    choices: [
+      choice("a", "Replicas avoid per-token collective synchronization between GPUs."),
+      choice("b", "Replicas use no model weights."),
+      choice("c", "Tensor parallelism disables batching."),
+    ],
+    correctChoiceId: "a",
+    explanation: "When the model fits on one GPU, replicas can scale throughput without communication on every cooperative operation.",
+  },
+  {
+    id: "question.inside-gpu.anatomy.02",
+    chapterId: "chapter.inside-gpu.anatomy",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "What determines whether another block can become resident on an SM?",
+    choices: [
+      choice("a", "The combined register, shared-memory, thread, warp, and block-slot budgets"),
+      choice("b", "Only the grid name"),
+      choice("c", "The tokenizer vocabulary size alone"),
+    ],
+    correctChoiceId: "a",
+    explanation: "Admission is constrained by whichever per-SM resource is exhausted first.",
+  },
+  {
+    id: "question.inside-gpu.kernel-launch.02",
+    chapterId: "chapter.inside-gpu.kernel-launch",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why can a launch return on the CPU before the kernel finishes?",
+    choices: [
+      choice("a", "The launch enqueues ordered work on an asynchronous stream."),
+      choice("b", "The CPU executes every GPU instruction itself."),
+      choice("c", "Kernel arguments are ignored."),
+    ],
+    correctChoiceId: "a",
+    explanation: "Completion is observed later through a dependency, event, transfer, or explicit synchronization.",
+  },
+  {
+    id: "question.inside-gpu.warp-scheduler.02",
+    chapterId: "chapter.inside-gpu.warp-scheduler",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "Why does high occupancy not guarantee high utilization?",
+    choices: [
+      choice("a", "Resident warps may still be ineligible because of dependencies, divergence, or resource contention."),
+      choice("b", "Occupancy measures tokenizer accuracy."),
+      choice("c", "Every resident warp always issues in the same cycle."),
+    ],
+    correctChoiceId: "a",
+    explanation: "Occupancy supplies candidates; the scheduler still needs eligible work and an available compatible pipeline.",
+  },
+  {
+    id: "question.inside-gpu.memory.02",
+    chapterId: "chapter.inside-gpu.memory",
+    kind: "single-choice",
+    level: "expert",
+    prompt: "A kernel sits below the sloped roofline. What should you investigate first?",
+    choices: [
+      choice("a", "Bytes moved, coalescing, locality, reuse, and fusion"),
+      choice("b", "Increasing temperature"),
+      choice("c", "Changing the model license"),
+    ],
+    correctChoiceId: "a",
+    explanation: "The sloped roof indicates a bandwidth-bound region where reducing traffic or increasing reuse is the primary lever.",
+  },
+] as const satisfies readonly MultipleChoiceQuestion[];
+
+export const questions = [
+  ...coreQuestions,
+  ...expertQuestions,
+] as const satisfies readonly MultipleChoiceQuestion[];
+
 const stages = (
   labels: readonly string[],
 ): AnimationDefinition["stages"] =>
@@ -762,8 +939,8 @@ const stages = (
   }));
 
 export const animations = [
-  ["animation.model-factory.weights-map", "Complete weights-to-tokens overview", ["Train", "Save weights", "Load", "Receive prompt", "Understand context", "Generate", "Stream answer"]],
-  ["animation.model-factory.token-predictor", "Explore a next-token distribution", ["Model context", "GPU context", "Decision context"]],
+  ["animation.model-factory.weights-map", "Orient across the weights-to-token journey", journeyStageLabels],
+  ["animation.model-factory.token-predictor", "Explore a next-token distribution", ["Example 1", "Example 2", "Example 3"]],
   ["animation.model-factory.parameter-builder", "Build a transformer parameter budget", ["Set architecture", "Compare parameter groups"]],
   ["animation.model-factory.pipeline-stages", "Compare model-building stages", ["Pretraining", "Supervised tuning", "Preference training", "Evaluation and release"]],
   ["animation.model-factory.training-loop", "Simulate a distributed training run", ["Load batch", "Forward pass", "Measure loss", "Backpropagate", "All-reduce gradients", "Optimizer step", "Checkpoint"]],

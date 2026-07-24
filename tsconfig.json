@@ -30,5 +30,12 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "examples", "worker"]
+  "exclude": [
+    "node_modules",
+    "examples",
+    "worker",
+    "app/components/AcademyApp 2.tsx",
+    "app/components/animations/FinalReplayAnimation 2.tsx",
+    "app/page 2.tsx"
+  ]
 }

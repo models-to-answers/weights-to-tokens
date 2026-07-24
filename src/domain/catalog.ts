@@ -71,6 +71,7 @@ export interface MultipleChoiceQuestion {
   id: QuestionId;
   chapterId: ChapterId;
   kind: "single-choice";
+  level?: "core" | "expert";
   prompt: string;
   choices: readonly {
     id: string;

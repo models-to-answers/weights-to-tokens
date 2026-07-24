@@ -1,6 +1,7 @@
 # Source Coverage and Interaction Migration Matrix
 
-This matrix is a release contract. A source unit is complete only when its
+This matrix is a release contract. Its evidence-level reconciliation is in
+`docs/curriculum-audit.md`. A source unit is complete only when its
 substantive teaching value is present in the unified academy, its interactions
 meet the deterministic Beginner/Expert contract, and its migration is recorded
 in `docs/provenance.md`.

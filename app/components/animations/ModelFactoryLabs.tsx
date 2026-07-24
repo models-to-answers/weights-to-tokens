@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import { journeyStages } from "@/src/content/journey";
 import type { DeterministicAnimationProps } from "./types";
 
 export function LabFrame({
@@ -118,36 +119,21 @@ export const numeric = (
   fallback: number,
 ) => (typeof inputs?.[key] === "number" ? inputs[key] : fallback);
 
-const JOURNEY_STAGES = [
-  ["Learn", "Model", "Examples change billions of parameter values."],
-  ["Package", "Model", "Weights, config, tokenizer, and metadata form an artifact."],
-  ["Place", "System", "The artifact moves through host memory into GPU HBM."],
-  ["Admit", "System", "Routing, capacity, and batching decide when work begins."],
-  ["Tokenize", "System", "Text becomes the IDs the model consumes."],
-  ["Prefill", "GPU", "Prompt positions run together and create the KV cache."],
-  ["Launch", "GPU", "Framework operations enqueue GPU kernels."],
-  ["Schedule", "GPU", "Blocks become resident and eligible warps issue."],
-  ["Read memory", "GPU", "Registers, cache, shared memory, and HBM feed operands."],
-  ["Decode", "GPU", "One next-token distribution is produced per sequence."],
-  ["Sample", "System", "A decoding policy selects the next token."],
-  ["Stream", "System", "The token returns while unfinished sequences loop."],
-] as const;
-
 export function JourneyMapLab({
   mode = "beginner",
   step = 0,
   onStepChange,
 }: DeterministicAnimationProps) {
-  const active = Math.min(step, JOURNEY_STAGES.length - 1);
-  const stage = JOURNEY_STAGES[active];
+  const active = Math.min(step, journeyStages.length - 1);
+  const stage = journeyStages[active];
   return (
     <LabFrame
       eyebrow="Unified academy · Golden journey"
-      title="Keep one prompt connected from learned weights to streamed text"
-      description="This compact map is the orientation layer. The final replay uses the same twelve causal stages at system and GPU zoom levels."
+      title="Orient yourself across the complete weights-to-token journey"
+      description="This is a three-level map: build the model, ready the inference system, then run one token-producing request. Select a stage to see which level owns it."
     >
       <div className="journey-map">
-        {JOURNEY_STAGES.map(([label, level], index) => (
+        {journeyStages.map(({ label, level }, index) => (
           <button
             type="button"
             className={index < active ? "is-past" : index === active ? "is-active" : ""}
@@ -162,10 +148,16 @@ export function JourneyMapLab({
         ))}
       </div>
       <div className="journey-focus">
-        <div><span>Current stage</span><strong>{stage[0]}</strong></div>
-        <div><span>Zoom level</span><strong>{stage[1]}</strong></div>
-        <p>{stage[2]}</p>
-        {mode === "expert" ? <i>Canonical replay stage {active + 1} of {JOURNEY_STAGES.length}; changing zoom never changes this position.</i> : null}
+        <div><span>Current stage</span><strong>{stage.label}</strong></div>
+        <div><span>Zoom level</span><strong>{stage.level}</strong></div>
+        <p>{stage.beginner}</p>
+        {mode === "expert" ? (
+          <div className="journey-focus__expert">
+            <p><strong>Mechanism</strong>{stage.expert}</p>
+            <p><strong>Failure gate</strong>{stage.failure}</p>
+            <i>Canonical replay stage {active + 1} of {journeyStages.length}; changing zoom never changes this position.</i>
+          </div>
+        ) : null}
       </div>
     </LabFrame>
   );
@@ -180,7 +172,7 @@ export function TokenPredictorLab({
 }: DeterministicAnimationProps) {
   const temperature = numeric(inputs, "temperature", 0.8);
   const contexts = [
-    "The production model predicts",
+    "The production model predicts the next",
     "A GPU hides memory latency by",
     "The safest deployment begins with",
   ];
@@ -210,7 +202,7 @@ export function TokenPredictorLab({
       <div className="lab-grid lab-grid--predictor">
         <div>
           <Tabs
-            labels={["Model", "GPU", "Decision"]}
+            labels={["Example 1", "Example 2", "Example 3"]}
             active={Math.min(step, 2)}
             onChange={(index) => onStepChange?.(index)}
           />
@@ -225,6 +217,11 @@ export function TokenPredictorLab({
             step={0.1}
             onChange={(value) => onInputChange?.("temperature", value)}
           />
+          <p className="temperature-explainer">
+            Lower temperature concentrates probability on the leading choices.
+            Higher temperature spreads probability across more candidates,
+            making selection less predictable.
+          </p>
           {mode === "expert" ? (
             <p className="lab-formula">
               p(tokenᵢ) = softmax(logitᵢ / T)
@@ -248,10 +245,10 @@ export function TokenPredictorLab({
 }
 
 const PIPELINE = [
-  { name: "Pretraining", share: 97.6, cost: "$10M–$100M+", outcome: "General capability" },
-  { name: "Supervised tuning", share: 1.4, cost: "$10K–$1M", outcome: "Instruction following" },
-  { name: "Preference training", share: 0.8, cost: "$10K–$1M", outcome: "Judgement and safety" },
-  { name: "Evaluation & release", share: 0.2, cost: "Continuous", outcome: "A shippable artifact" },
+  { name: "Pretraining", share: 97.6, cost: "$10M–$100M+", input: "Very large general corpus", action: "Predict tokens and update all weights", outcome: "General capability", owner: "Data, research, and distributed-systems teams", measure: "Held-out loss plus broad capability evaluations", failure: "Bad data mixtures or unstable scaling consume the largest budget." },
+  { name: "Supervised tuning", share: 1.4, cost: "$10K–$1M", input: "Prompt-and-good-answer examples", action: "Imitate the desired response pattern", outcome: "Instruction following", owner: "Post-training, product, and domain teams", measure: "Task success, format adherence, and general-capability retention", failure: "Narrow examples can overfit style or erase useful behavior." },
+  { name: "Preference training", share: 0.8, cost: "$10K–$1M", input: "Ranked or rated alternatives", action: "Favor preferred behavior under constraints", outcome: "Judgement and safety", owner: "Alignment, evaluation, policy, and product teams", measure: "Preference win rate plus truthfulness and safety guardrails", failure: "The model can optimize rater preferences instead of the intended quality." },
+  { name: "Evaluation & release", share: 0.2, cost: "Continuous", input: "Capability, safety, and product tests", action: "Measure, gate, package, and version", outcome: "A shippable artifact", owner: "Evaluation, safety, platform, and release owners", measure: "Thresholds, regressions, red-team findings, and product acceptance", failure: "Averages can hide critical regressions or untested operating conditions." },
 ] as const;
 
 export function PipelineStagesLab({
@@ -287,10 +284,17 @@ export function PipelineStagesLab({
       </div>
       <div className="lab-readouts">
         <div><span>Selected stage</span><strong>{stage.name}</strong></div>
+        <div><span>What enters</span><strong>{stage.input}</strong></div>
+        <div><span>What happens</span><strong>{stage.action}</strong></div>
         <div><span>Indicative cost</span><strong>{stage.cost}</strong></div>
         <div><span>Primary outcome</span><strong>{stage.outcome}</strong></div>
         {mode === "expert" ? (
-          <div><span>Interpretation</span><strong>Compute share ≠ product-value share</strong></div>
+          <>
+            <div><span>Owners</span><strong>{stage.owner}</strong></div>
+            <div><span>Evaluation</span><strong>{stage.measure}</strong></div>
+            <div><span>Failure mode</span><strong>{stage.failure}</strong></div>
+            <div><span>Interpretation</span><strong>Compute share ≠ product-value share</strong></div>
+          </>
         ) : null}
       </div>
     </LabFrame>

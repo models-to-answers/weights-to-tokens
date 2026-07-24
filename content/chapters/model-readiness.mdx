@@ -22,4 +22,22 @@ after that usable execution path succeeds.
 
 <InteractionSlot animationId="animation.inference-system.model-loading" />
 
+<ExpertOnly>
+
+### Locality, allocation, and readiness gates
+
+An artifact may travel from object storage to a node-local cache, through
+pinned host memory, and into HBM. Local caching reduces repeated cold-start
+traffic but requires eviction and version-integrity policy. The runtime may
+reserve contiguous arenas, establish tensor-parallel communicators, select or
+compile kernels for representative shapes, and preallocate paged KV-cache
+blocks.
+
+A good readiness gate exercises the same path real work will use. “Process is
+running” and “bytes reached HBM” are necessary but insufficient signals.
+Failures should keep admission closed and expose which gate—integrity,
+capacity, communication, compilation, or warmup—failed.
+
+</ExpertOnly>
+
 <ChapterCheck />

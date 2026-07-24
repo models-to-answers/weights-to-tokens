@@ -177,3 +177,24 @@ an explicit, approved exclusion in `docs/migration-matrix.md`. Existing
 animations should be adapted at comparable or greater teaching depth. New
 animations must be thorough, polished, deterministic, accessible, and support
 Beginner/Expert progressive disclosure.
+
+### D-016 — Core and Expert are two mastery levels over one curriculum
+
+- **Status:** Approved
+- **Date:** 2026-07-24
+- **Refines:** D-003 and D-009
+
+The academy has one ordered conceptual spine. Core mode explains every
+essential stage in plain language and may stand alone. Expert mode can be
+entered directly: it retains the Core foundation and adds one or two meaningful
+levels of mechanisms, terminology, numbers, implementation choices, failure
+modes, and operational trade-offs.
+
+Animations are not duplicated by mode. One canonical component and saved state
+normally render a guided Core projection and a denser Expert projection.
+Separate Expert-only labs are allowed only for intrinsically specialized work.
+
+Every chapter has a Core check and a distinct Expert challenge. Core completion
+and Expert mastery are persisted separately. Completing Expert directly
+requires both checks and also satisfies Core completion. The final replay also
+records Core and Expert completion separately.

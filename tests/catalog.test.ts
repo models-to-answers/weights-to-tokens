@@ -56,6 +56,20 @@ describe("academy catalog", () => {
     }
   });
 
+  it("gives every chapter a Core check and a distinct Expert challenge", () => {
+    for (const chapter of academyCatalog.chapters) {
+      const chapterQuestions = academyCatalog.questions.filter(
+        (question) => question.chapterId === chapter.id,
+      );
+      expect(
+        chapterQuestions.some((question) => question.level !== "expert"),
+      ).toBe(true);
+      expect(
+        chapterQuestions.some((question) => question.level === "expert"),
+      ).toBe(true);
+    }
+  });
+
   it("preserves the required source interaction families", () => {
     const required = [
       "animation.model-factory.token-predictor",
@@ -85,6 +99,17 @@ describe("academy catalog", () => {
       true,
     );
   });
+
+  it("keeps the orientation map and final replay on the same twelve-stage spine", () => {
+    const overview = animationDefinitions.find(
+      (animation) => animation.id === "animation.model-factory.weights-map",
+    );
+    const replay = animationDefinitions.find(
+      (animation) => animation.id === "animation.replay.one-prompt",
+    );
+    expect(overview?.stages).toHaveLength(12);
+    expect(replay?.stages).toHaveLength(12);
+  });
 });
 
 describe("browser-local learning state", () => {
@@ -109,6 +134,54 @@ describe("browser-local learning state", () => {
     });
     expect(parseAcademyState(serializeAcademyState(expert))).toEqual(expert);
     expect(parseAcademyState("{not-json")).toEqual(initialAcademyState);
+  });
+
+  it("completing Expert also completes Core while preserving separate mastery", () => {
+    const chapterId = academyCatalog.chapters[0].id;
+    const completed = academyReducer(initialAcademyState, {
+      type: "COMPLETE_EXPERT_CHAPTER",
+      chapterId,
+    });
+    expect(completed.completedBeginnerChapterIds).toEqual([chapterId]);
+    expect(completed.completedExpertChapterIds).toEqual([chapterId]);
+  });
+
+  it("migrates version-one Core progress without inventing Expert mastery", () => {
+    const chapterId = academyCatalog.chapters[0].id;
+    const parsed = parseAcademyState(
+      JSON.stringify({
+        ...initialAcademyState,
+        schemaVersion: 1,
+        completedExpertChapterIds: undefined,
+        completedBeginnerChapterIds: [chapterId],
+      }),
+    );
+    expect(parsed.completedBeginnerChapterIds).toEqual([chapterId]);
+    expect(parsed.completedExpertChapterIds).toEqual([]);
+  });
+
+  it("normalizes persisted Expert mastery so it always implies Core mastery", () => {
+    const chapterId = academyCatalog.chapters[0].id;
+    const parsed = parseAcademyState(
+      JSON.stringify({
+        ...initialAcademyState,
+        completedExpertChapterIds: [chapterId],
+        completedBeginnerChapterIds: [],
+        finalReplayCompleted: false,
+        finalReplayExpertCompleted: true,
+      }),
+    );
+    expect(parsed.completedBeginnerChapterIds).toEqual([chapterId]);
+    expect(parsed.finalReplayCompleted).toBe(true);
+  });
+
+  it("records Expert replay completion as both Core and Expert", () => {
+    const completed = academyReducer(initialAcademyState, {
+      type: "COMPLETE_FINAL_REPLAY",
+      mode: "expert",
+    });
+    expect(completed.finalReplayCompleted).toBe(true);
+    expect(completed.finalReplayExpertCompleted).toBe(true);
   });
 
   it("drops stale IDs and clamps persisted animation stages", () => {

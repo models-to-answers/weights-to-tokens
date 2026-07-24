@@ -96,6 +96,8 @@ a:focus-visible {
 .progress-panel__label { display: flex; justify-content: space-between; font-size: .78rem; }
 .progress-track { height: .35rem; margin: .55rem 0; overflow: hidden; border-radius: 2rem; background: rgba(255,255,255,.14); }
 .progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--amber); transition: width .3s ease; }
+.progress-track--expert { margin-top: .45rem; }
+.progress-track--expert span { background: #9ed8cb; }
 .progress-panel small { color: #a9c5bd; font-size: .68rem; }
 
 .chapter-nav { margin-top: 1.1rem; }
@@ -233,6 +235,28 @@ a:focus-visible {
 .expert-panel span { color: var(--violet); font: 720 .68rem var(--font-geist-mono), monospace; text-transform: uppercase; }
 .expert-panel p { margin: .45rem 0 0; color: #4f4a71; line-height: 1.6; }
 .expert-panel ul { margin: .75rem 0 0; padding-left: 1.2rem; color: #4f4a71; line-height: 1.55; }
+.expert-deep-dive {
+  margin: 1.8rem 0;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--violet) 34%, var(--line));
+  border-left: .32rem solid var(--violet);
+  border-radius: .85rem;
+  background: color-mix(in srgb, var(--violet) 6%, var(--panel));
+}
+.expert-deep-dive > span {
+  display: inline-block;
+  margin-bottom: .35rem;
+  color: var(--violet);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.temperature-explainer { margin: .7rem 0 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+.knowledge-check--expert {
+  border-color: color-mix(in srgb, var(--violet) 35%, var(--line));
+  background: color-mix(in srgb, var(--violet) 5%, var(--panel));
+}
 
 .lesson-tabs {
   margin-top: 3.5rem;

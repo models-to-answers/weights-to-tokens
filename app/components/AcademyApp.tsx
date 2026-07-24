@@ -6,6 +6,7 @@ import {
   useState,
   useSyncExternalStore,
   type ComponentType,
+  type ReactNode,
 } from "react";
 import {
   animationRegistry,
@@ -26,6 +27,8 @@ import {
   type DeterministicAnimationState,
   type LearningMode,
   type MultipleChoiceQuestion,
+  type QuestionId,
+  type ReplayStageId,
   type SerializableScalar,
 } from "@/src/domain";
 import { useAcademyStore } from "@/src/state";
@@ -166,6 +169,12 @@ export function AcademyApp(props: AcademyAppProps) {
     academyState.completedBeginnerChapterIds.length +
     (academyState.finalReplayCompleted ? 1 : 0);
   const progress = Math.round((progressCompleted / progressTotal) * 100);
+  const expertProgress = Math.round(
+    ((academyState.completedExpertChapterIds.length +
+      (academyState.finalReplayExpertCompleted ? 1 : 0)) /
+      progressTotal) *
+      100,
+  );
 
   const groupedParts = useMemo(
     () =>
@@ -207,6 +216,15 @@ export function AcademyApp(props: AcademyAppProps) {
     dispatch,
   ]);
 
+  useEffect(() => {
+    if (activeView === "replay") {
+      dispatch({
+        type: "COMPLETE_REPLAY_STAGE",
+        stageId: replayStageDefinitions[0].id,
+      });
+    }
+  }, [activeView, dispatch]);
+
   function navigate(view: ChapterId | "replay", replace = false) {
     const path =
       view === "replay"
@@ -228,13 +246,14 @@ export function AcademyApp(props: AcademyAppProps) {
 
   function completeAndContinue() {
     if (!activeChapter) {
-      dispatch({ type: "COMPLETE_FINAL_REPLAY" });
+      dispatch({ type: "COMPLETE_FINAL_REPLAY", mode: academyState.mode });
       return;
     }
-    dispatch({
-      type: "COMPLETE_BEGINNER_CHAPTER",
-      chapterId: activeChapter.id,
-    });
+    dispatch(
+      academyState.mode === "expert"
+        ? { type: "COMPLETE_EXPERT_CHAPTER", chapterId: activeChapter.id }
+        : { type: "COMPLETE_BEGINNER_CHAPTER", chapterId: activeChapter.id },
+    );
     if (activeIndex < chapters.length - 1) {
       navigate(chapters[activeIndex + 1].id);
     } else {
@@ -263,12 +282,19 @@ export function AcademyApp(props: AcademyAppProps) {
           </div>
         </div>
 
-        <div className="progress-panel" aria-label={`${progress}% complete`}>
+        <div
+          className="progress-panel"
+          aria-label={`Core ${progress}% complete, Expert ${expertProgress}% complete`}
+        >
           <div className="progress-panel__label">
             <span>Your journey</span><strong>{progress}%</strong>
           </div>
           <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
-          <small>{progressCompleted} of {progressTotal} complete · saved in this browser</small>
+          <small>Core {progressCompleted}/{progressTotal} · Expert {academyState.completedExpertChapterIds.length + (academyState.finalReplayExpertCompleted ? 1 : 0)}/{progressTotal}</small>
+          <div className="progress-track progress-track--expert">
+            <span style={{ width: `${expertProgress}%` }} />
+          </div>
+          <small>Saved only in this browser</small>
         </div>
 
         <nav className="chapter-nav" aria-label="Chapters">
@@ -278,6 +304,8 @@ export function AcademyApp(props: AcademyAppProps) {
               {group.chapters.map((chapter, index) => {
                 const complete =
                   academyState.completedBeginnerChapterIds.includes(chapter.id);
+                const expertComplete =
+                  academyState.completedExpertChapterIds.includes(chapter.id);
                 const active = activeView === chapter.id;
                 return (
                   <a
@@ -293,7 +321,7 @@ export function AcademyApp(props: AcademyAppProps) {
                     }}
                     aria-current={active ? "page" : undefined}
                   >
-                    <span>{complete ? "✓" : String(group.order) + "." + (index + 1)}</span>
+                    <span>{expertComplete ? "◆" : complete ? "✓" : String(group.order) + "." + (index + 1)}</span>
                     {chapter.title}
                   </a>
                 );
@@ -404,9 +432,9 @@ export function AcademyApp(props: AcademyAppProps) {
               });
             }}
             savedAnimations={academyState.animationStates}
-            onAnswer={(selectedChoiceId) => {
+            onAnswer={(questionId, selectedChoiceId) => {
               const question = questions.find(
-                (candidate) => candidate.id === activeChapter.questionIds[0],
+                (candidate) => candidate.id === questionId,
               )!;
               dispatch({
                 type: "RECORD_QUESTION_ATTEMPT",
@@ -418,10 +446,13 @@ export function AcademyApp(props: AcademyAppProps) {
                 },
               });
             }}
-            lastSelectedChoiceId={
-              academyState.questionAttempts[activeChapter.questionIds[0]]?.at(-1)
-                ?.selectedChoiceId
-            }
+            lastSelectedChoiceIds={Object.fromEntries(
+              activeChapter.questionIds.map((questionId) => [
+                questionId,
+                academyState.questionAttempts[questionId]?.at(-1)
+                  ?.selectedChoiceId,
+              ]),
+            )}
             activeIndex={activeIndex}
             onPrevious={() => {
               if (activeIndex > 0) navigate(chapters[activeIndex - 1].id);
@@ -435,7 +466,12 @@ export function AcademyApp(props: AcademyAppProps) {
               academyState.animationStates["animation.replay.one-prompt"]
                 ?.stageIndex ?? 0
             }
-            completed={academyState.finalReplayCompleted}
+            completed={
+              academyState.mode === "expert"
+                ? academyState.finalReplayExpertCompleted
+                : academyState.finalReplayCompleted
+            }
+            completedStageIds={academyState.completedReplayStageIds}
             onStepChange={(stageIndex) => {
               const definition =
                 animationRegistry["animation.replay.one-prompt"];
@@ -484,8 +520,8 @@ type ChapterLessonProps = {
   savedAnimations: Readonly<
     Partial<Record<AnimationId, DeterministicAnimationState>>
   >;
-  onAnswer: (choiceId: string) => void;
-  lastSelectedChoiceId?: string;
+  onAnswer: (questionId: QuestionId, choiceId: string) => void;
+  lastSelectedChoiceIds: Readonly<Partial<Record<QuestionId, string>>>;
   activeIndex: number;
   onPrevious: () => void;
   onComplete: () => void;
@@ -500,21 +536,69 @@ function ChapterLesson({
   onAnimationInput,
   savedAnimations,
   onAnswer,
-  lastSelectedChoiceId,
+  lastSelectedChoiceIds,
   activeIndex,
   onPrevious,
   onComplete,
 }: ChapterLessonProps) {
   const LessonContent = lessonComponents[chapter.id];
-  const question: MultipleChoiceQuestion = questions.find(
-    (candidate) => candidate.id === chapter.questionIds[0],
-  )!;
+  const chapterQuestions: readonly MultipleChoiceQuestion[] = chapter.questionIds.map(
+    (questionId) => questions.find((candidate) => candidate.id === questionId)!,
+  );
+  const requiredQuestions = chapterQuestions.filter(
+    (question) => mode === "expert" || question.level !== "expert",
+  );
+  const canComplete = requiredQuestions.every(
+    (question) =>
+      lastSelectedChoiceIds[question.id] === question.correctChoiceId,
+  );
   const glossary = glossaryForChapter(chapter.id);
   const sources = sourcesForChapter(chapter.id);
-  const selectedChoice = question.choices.find(
-    (choice) => choice.id === lastSelectedChoiceId,
-  );
-  const correct = lastSelectedChoiceId === question.correctChoiceId;
+  function ExpertOnly({ children }: { children?: ReactNode }) {
+    if (mode !== "expert") return null;
+    return <aside className="expert-deep-dive"><span>Expert depth</span>{children}</aside>;
+  }
+
+  function QuestionCard({ question }: { question: MultipleChoiceQuestion }) {
+    const lastSelectedChoiceId = lastSelectedChoiceIds[question.id];
+    const selectedChoice = question.choices.find(
+      (choice) => choice.id === lastSelectedChoiceId,
+    );
+    const correct = lastSelectedChoiceId === question.correctChoiceId;
+    const expert = question.level === "expert";
+    return (
+      <section className={`knowledge-check ${expert ? "knowledge-check--expert" : ""}`}>
+        <div>
+          <p className="section-label">{expert ? "Expert challenge" : "Core check"}</p>
+          <h2>{question.prompt}</h2>
+        </div>
+        <div className="answer-grid">
+          {question.choices.map((choice, index) => (
+            <button
+              type="button"
+              key={choice.id}
+              className={[
+                lastSelectedChoiceId === choice.id &&
+                  (correct ? "is-correct" : "is-wrong"),
+              ].filter(Boolean).join(" ")}
+              onClick={() => onAnswer(question.id, choice.id)}
+              aria-pressed={lastSelectedChoiceId === choice.id}
+            >
+              <span>{String.fromCharCode(65 + index)}</span>
+              {choice.label}
+            </button>
+          ))}
+        </div>
+        {selectedChoice ? (
+          <div className={`answer-feedback ${correct ? "is-correct" : "is-wrong"}`} role="status">
+            <strong>{correct ? "Correct." : "Try again."}</strong>
+            <p>{correct ? question.explanation : "Use the narrative and active animation state as your clue."}</p>
+            {correct && mode === "expert" && question.expertExplanation ? <p>{question.expertExplanation}</p> : null}
+          </div>
+        ) : null}
+      </section>
+    );
+  }
   function InteractionSlot({ animationId }: { animationId?: string }) {
     if (!animationId) return null;
     const canonicalId = animationId as AnimationId;
@@ -577,51 +661,9 @@ function ChapterLesson({
           </aside>
         ) : null}
 
-        <section className="knowledge-check">
-          <div>
-            <p className="section-label">Quick check</p>
-            <h2>{question.prompt}</h2>
-          </div>
-          <div className="answer-grid">
-            {question.choices.map((choice, index) => (
-              <button
-                type="button"
-                key={choice.id}
-                className={[
-                  lastSelectedChoiceId === choice.id &&
-                    (correct ? "is-correct" : "is-wrong"),
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => onAnswer(choice.id)}
-                aria-pressed={lastSelectedChoiceId === choice.id}
-              >
-                <span>{String.fromCharCode(65 + index)}</span>
-                {choice.label}
-              </button>
-            ))}
-          </div>
-          {selectedChoice ? (
-            <div
-              className={`answer-feedback ${
-                correct ? "is-correct" : "is-wrong"
-              }`}
-              role="status"
-            >
-              <strong>{correct ? "Correct." : "Try again."}</strong>
-              <p>
-                {correct
-                  ? question.explanation
-                  : "Use the chapter narrative and active animation stage as your clue."}
-              </p>
-              {correct &&
-              mode === "expert" &&
-              question.expertExplanation ? (
-                <p>{question.expertExplanation}</p>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
+        {chapterQuestions
+          .filter((question) => question.level !== "expert" || mode === "expert")
+          .map((question) => <QuestionCard question={question} key={question.id} />)}
       </>
     );
   }
@@ -714,7 +756,7 @@ function ChapterLesson({
           hidden={detailTab !== "lesson"}
         >
           <p className="section-label">Core narrative · MDX</p>
-          <LessonContent components={{ InteractionSlot, ChapterCheck }} />
+          <LessonContent components={{ InteractionSlot, ChapterCheck, ExpertOnly }} />
         </div>
 
         <div
@@ -763,7 +805,13 @@ function ChapterLesson({
         >
           Previous chapter
         </button>
-        <button type="button" className="primary-button" onClick={onComplete}>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={onComplete}
+          disabled={!canComplete}
+          title={canComplete ? undefined : "Answer the required check correctly first"}
+        >
           {activeIndex === chapters.length - 1
             ? "Complete & open final replay"
             : "Complete & continue"}
@@ -777,6 +825,7 @@ type ReplayLessonProps = {
   mode: LearningMode;
   savedStep: number;
   completed: boolean;
+  completedStageIds: readonly ReplayStageId[];
   onStepChange: (step: number) => void;
   onNavigateChapter: (chapterId: ChapterId) => void;
   onComplete: () => void;
@@ -786,10 +835,14 @@ function ReplayLesson({
   mode,
   savedStep,
   completed,
+  completedStageIds,
   onStepChange,
   onNavigateChapter,
   onComplete,
 }: ReplayLessonProps) {
+  const replayStagesComplete = replayStageDefinitions.every((stage) =>
+    completedStageIds.includes(stage.id),
+  );
   return (
     <article className="lesson">
       <div className="lesson-hero">
@@ -828,7 +881,17 @@ function ReplayLesson({
         <a className="secondary-button" href={chapterPath(chapters.at(-1)!)}>
           Back to GPU memory
         </a>
-        <button type="button" className="primary-button" onClick={onComplete}>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={onComplete}
+          disabled={!replayStagesComplete}
+          title={
+            !replayStagesComplete
+              ? "Visit every replay stage before completing the journey"
+              : undefined
+          }
+        >
           {completed ? "Replay complete ✓" : "Mark journey complete"}
         </button>
       </footer>

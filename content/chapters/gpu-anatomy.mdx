@@ -21,4 +21,21 @@ device-to-SM-to-warp-to-execution-unit hierarchy.
 
 <InteractionSlot animationId="animation.inside-gpu.zoom-anatomy" />
 
+<ExpertOnly>
+
+### Resources determine residency
+
+An SM admits whole blocks only when it has enough registers, shared memory,
+thread slots, warp slots, and block slots. The first exhausted resource limits
+how many blocks and warps can be resident. Resident does not mean eligible:
+scoreboard dependencies, barriers, memory waits, and unavailable pipelines can
+still prevent issue.
+
+Ordinary arithmetic, tensor operations, integer/address work, special
+functions, and loads/stores route to different execution pipelines. Results
+normally write back to registers; memory operations continue through the
+on-chip hierarchy toward L2 and HBM.
+
+</ExpertOnly>
+
 <ChapterCheck />

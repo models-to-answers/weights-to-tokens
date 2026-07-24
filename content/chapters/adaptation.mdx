@@ -1,30 +1,77 @@
-## Change context or change weights?
+## Four ways to get a model that knows your business
 
-Prompting changes the instructions supplied with a request. Retrieval adds
-external information at request time. Neither method changes the base model’s
-weights, which makes them relatively quick to update and reverse.
+Choose the least expensive intervention that solves the actual problem.
 
-Fine-tuning changes some or all weights to alter behavior. Parameter-efficient
-methods such as LoRA train a small set of adapter parameters while keeping the
-base weights frozen. Continued pretraining is appropriate when the model must
-learn broad domain patterns rather than follow a narrower task format.
+| Approach | What changes | Best fit | Business example |
+| --- | --- | --- | --- |
+| **Prompting** | Instructions and examples sent with each request | Clarifying a task, format, role, or policy | Ask for an incident summary in the company’s standard five headings |
+| **Retrieval (RAG)** | Current source material is added to the request context | Changing facts that must be cited or updated | Retrieve the latest product catalog and support policy before answering |
+| **Fine-tuning** | Some or all model weights change | Stable behavior, tone, format, or a narrow task | Train on approved escalation examples so outputs follow the house workflow |
+| **Pretraining from scratch** | A new base model and its broad capabilities are created | Exceptional scale, sovereignty, language, or genuinely unique data domains | Build a sovereign-language foundation model when no suitable base can be used |
 
-Choose the least expensive intervention that changes the behavior you actually
-need, and define an evaluation before modifying weights.
+Most organizations should begin with prompting, add retrieval for current
+knowledge, and change weights only when behavior—not merely facts—must change.
+Pretraining from scratch is rarely the right business adaptation strategy.
 
-### Why low-rank adaptation works
+## Prompting and retrieval leave the base weights alone
 
-Full fine-tuning updates every parameter. LoRA freezes the pretrained base and
-learns two thin matrices whose product forms an update. The update can later be
-merged into the base, so it need not add inference latency.
+Prompting is instant and reversible. Retrieval keeps knowledge outside the
+model, so updating or rolling back the source updates behavior without a
+training run. Retrieval still needs good chunking, ranking, permissions,
+citations, and evaluation; it is not automatically grounded just because
+documents were fetched.
+
+<ExpertOnly>
+
+### Continued pretraining is a fifth, specialized intervention
+
+Continued pretraining starts from an existing base but exposes it to substantial
+domain text using a pretraining-style objective. It can improve broad domain
+language or representations, but is more expensive and harder to evaluate than
+RAG or supervised adaptation. It is distinct from building a base from scratch.
+
+</ExpertOnly>
+
+## Fine-tuning changes behavior
+
+Full fine-tuning updates every trainable weight and can achieve the highest
+adaptation ceiling, but it consumes substantial memory and creates a complete
+model variant. Narrow data can also cause catastrophic forgetting.
+
+LoRA freezes the base and learns two thin matrices whose product forms a
+full-shaped update. That makes one base reusable across many small adapters.
 
 <InteractionSlot animationId="animation.model-factory.adaptation-lab" />
 
-### Compare the intervention points
+<ExpertOnly>
 
-LoRA, QLoRA, adapters, prefix tuning, and head-only training touch different
-parts of the computation and leave different costs behind.
+For a layer `h = Wx`, LoRA uses
+`h = Wx + (α/r)BAx`, with rank r much smaller than the layer dimensions.
+Initializing one factor to zero starts exactly at the base model. The update
+can later be merged into W, avoiding an extra inference operation.
+
+Target modules, data quality, learning rate, rank, and evaluation usually
+matter more than simply increasing adapter size. LoRA is strong for style,
+format, and behavior; it is a poor replacement for retrieving thousands of
+changing facts.
+
+</ExpertOnly>
+
+## Compare fine-tuning methods
 
 <InteractionSlot animationId="animation.model-factory.fine-tune-methods" />
+
+- **QLoRA** keeps the frozen base quantized while training LoRA parameters.
+- **Adapters** insert small permanent modules and therefore add inference work.
+- **Prefix or prompt tuning** learns virtual input tokens but consumes context.
+- **Head-only training** is a useful low-cost baseline.
+
+<ExpertOnly>
+
+Preference adaptation can combine LoRA with DPO, while full fine-tuning remains
+appropriate when the cheaper interventions fail and the team can afford the
+memory, evaluation, rollback, and version-management burden.
+
+</ExpertOnly>
 
 <ChapterCheck />
