@@ -2,8 +2,11 @@
 
 **From Weights to Tokens: An Interactive Journey Through Models, Inference, and GPUs**
 
-[How AI Models Produce Answers](https://from-weights-to-tokens.sreemakam.chatgpt.site)
-is a frontend-only interactive academy that follows one connected AI journey:
+[Model Academy](https://modelacademy.tech) is a frontend-only interactive
+academy that follows one connected AI journey:
+
+- **Primary website:** [https://modelacademy.tech](https://modelacademy.tech)
+- **Sites address:** [https://from-weights-to-tokens.sreemakam.chatgpt.site](https://from-weights-to-tokens.sreemakam.chatgpt.site)
 
 1. how training produces model weights and deployable artifacts;
 2. how an inference system prepares a prompt and runs it on one or more GPUs;
