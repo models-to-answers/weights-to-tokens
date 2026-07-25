@@ -128,6 +128,12 @@ milestone's acceptance evidence has not been recorded here.
   responses are stored outside learner state in a linked Google Sheet.
 - Linked both maintainer names in the site footer to their public LinkedIn
   profiles.
+- Added a “Why we built this” preface to the introduction, connecting the
+  fragmented way AI inference is commonly taught to the academy's complete,
+  foundation-first journey. The signature links both co-maintainers' LinkedIn
+  profiles.
+- Recorded `ModelAcademy.tech` as the planned public custom domain without
+  changing the academy title, subtitle, repository, or current deployment URL.
 - Refreshed title, description, Open Graph metadata, and the 1200×630 social
   preview card for the new product identity.
 - Prepared the academy for publication in

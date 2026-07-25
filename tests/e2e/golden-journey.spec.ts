@@ -24,15 +24,31 @@ test("introduction explains the academy and opens each part without affecting pr
     ),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Who this is for" })).toBeVisible();
+  const motivation = page.getByRole("region", { name: "Why we built this" });
+  await expect(motivation).toBeVisible();
+  await expect(
+    motivation.getByText(/AI inference is often explained through isolated concepts/),
+  ).toBeVisible();
+  await expect(motivation.getByRole("link", { name: "Ritesh Dhoot" })).toHaveAttribute(
+    "href",
+    "https://www.linkedin.com/in/riteshdhoot/",
+  );
+  await expect(
+    motivation.getByRole("link", { name: "Sreenivas Makam" }),
+  ).toHaveAttribute(
+    "href",
+    "https://www.linkedin.com/in/sreenivasmakam/",
+  );
   await expect(page.getByRole("heading", { name: "What you will understand" })).toBeVisible();
   await expect(page.getByText("Beginner is the complete guided path.")).toBeVisible();
   await expect(page.getByText("Expert adds the mechanisms underneath.")).toBeVisible();
   await expect(page.getByText(/Maintained by Sreenivas Makam and Ritesh Dhoot/)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Sreenivas Makam" })).toHaveAttribute(
+  const footer = page.locator(".academy-footer");
+  await expect(footer.getByRole("link", { name: "Sreenivas Makam" })).toHaveAttribute(
     "href",
     "https://www.linkedin.com/in/sreenivasmakam/",
   );
-  await expect(page.getByRole("link", { name: "Ritesh Dhoot" })).toHaveAttribute(
+  await expect(footer.getByRole("link", { name: "Ritesh Dhoot" })).toHaveAttribute(
     "href",
     "https://www.linkedin.com/in/riteshdhoot/",
   );

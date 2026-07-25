@@ -102,6 +102,64 @@ export function AcademyIntroduction({
         </div>
       </section>
 
+      <section
+        className="introduction-motivation"
+        aria-labelledby="motivation-title"
+      >
+        <div className="introduction-motivation__heading">
+          <p className="section-label">Our motivation</p>
+          <h2 id="motivation-title">Why we built this</h2>
+        </div>
+        <div className="introduction-motivation__story">
+          <p>
+            AI inference is often explained through isolated concepts—model
+            weights, tokens, GPUs, KV caches, batching, and kernels. Learning
+            each concept individually does not always make it clear how they
+            work together as one system.
+          </p>
+          <p>
+            We created this interactive academy to bridge that gap. It follows
+            the complete journey—from how a model is built and packaged,
+            through deployment and inference, to the generation of output
+            tokens. Our goal is to help engineers, architects, technology
+            leaders, and curious learners understand not only what happens
+            inside an AI inference platform, but also why its architectural
+            decisions matter.
+          </p>
+          <p>
+            We often discuss technology by returning to its foundational
+            concepts because we believe genuine understanding begins with
+            clarity at the foundation. This academy is our attempt to simplify
+            the journey from model weights to generated answers and share what
+            we have learned.
+          </p>
+          <p>
+            We hope it turns a complex topic into something you can explore,
+            understand, and confidently explain. We welcome your feedback and
+            hope this learning journey benefits everyone exploring AI models,
+            inference, and GPUs.
+          </p>
+          <p className="introduction-motivation__signature">
+            —{" "}
+            <a
+              href="https://www.linkedin.com/in/riteshdhoot/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ritesh Dhoot
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://www.linkedin.com/in/sreenivasmakam/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Sreenivas Makam
+            </a>
+          </p>
+        </div>
+      </section>
+
       <section className="introduction-outcomes">
         <div>
           <p className="section-label">Key outcomes</p>

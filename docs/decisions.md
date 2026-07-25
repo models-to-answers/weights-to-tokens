@@ -283,13 +283,24 @@ sensitive information and makes a reply email optional.
 - **Status:** Approved
 - **Date:** 2026-07-25
 
-The public domain identity is **Models to Answers**, with
-`ModelsToAnswers.tech` planned as the custom domain. The reader-facing academy
+The public custom domain is **ModelAcademy.tech**. The reader-facing academy
 title is **How AI Models Produce Answers**, and its subtitle remains **From
 Weights to Tokens: An Interactive Journey Through Models, Inference, and
-GPUs**.
+GPUs**. The domain does not rename the curriculum, GitHub organization, or
+repository.
 
 Source code lives in the `models-to-answers/weights-to-tokens` GitHub
 repository. The GitHub organization is the durable umbrella for this and
 potential future educational projects. Sreenivas Makam and Ritesh Dhoot are the
 project's co-maintainers.
+
+### D-023 — The introduction includes the creators' motivation
+
+- **Status:** Approved
+- **Date:** 2026-07-25
+
+The introduction includes an unscored “Why we built this” preface after the
+learning promise and audience, before the outcomes. It explains the gap between
+learning isolated inference concepts and understanding the complete system,
+states the academy's foundation-first teaching philosophy, invites feedback,
+and links the two co-maintainers' names to their LinkedIn profiles.

@@ -22,6 +22,10 @@ test("server-renders the academy introduction", async () => {
   assert.match(html, /How AI Models Produce Answers/i);
   assert.match(html, /From Weights to Tokens: An Interactive Journey/i);
   assert.match(html, /Who this is for/i);
+  assert.match(html, /Why we built this/i);
+  assert.match(html, /AI inference is often explained through isolated concepts/i);
+  assert.match(html, /linkedin\.com\/in\/riteshdhoot/i);
+  assert.match(html, /linkedin\.com\/in\/sreenivasmakam/i);
   assert.match(html, /What you will understand/i);
   assert.match(html, /Model Factory/i);
   assert.match(html, /The learning promise/i);
