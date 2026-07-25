@@ -570,8 +570,22 @@ export function AcademyApp(props: AcademyAppProps) {
 
         <footer className="academy-footer">
           <p>
-            Maintained by <strong>Sreenivas Makam</strong> and{" "}
-            <strong>Ritesh Dhoot</strong>.
+            Maintained by{" "}
+            <a
+              href="https://www.linkedin.com/in/sreenivasmakam/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <strong>Sreenivas Makam</strong>
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://www.linkedin.com/in/riteshdhoot/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <strong>Ritesh Dhoot</strong>
+            </a>.
           </p>
           <div>
             <span>Built for people who want to understand the whole AI journey.</span>

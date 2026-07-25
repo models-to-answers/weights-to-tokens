@@ -28,6 +28,14 @@ test("introduction explains the academy and opens each part without affecting pr
   await expect(page.getByText("Beginner is the complete guided path.")).toBeVisible();
   await expect(page.getByText("Expert adds the mechanisms underneath.")).toBeVisible();
   await expect(page.getByText(/Maintained by Sreenivas Makam and Ritesh Dhoot/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sreenivas Makam" })).toHaveAttribute(
+    "href",
+    "https://www.linkedin.com/in/sreenivasmakam/",
+  );
+  await expect(page.getByRole("link", { name: "Ritesh Dhoot" })).toHaveAttribute(
+    "href",
+    "https://www.linkedin.com/in/riteshdhoot/",
+  );
   await expect(page.getByRole("link", { name: "Share feedback" }).first()).toHaveAttribute(
     "href",
     /docs\.google\.com\/forms\/.+\/viewform/,

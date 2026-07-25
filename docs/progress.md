@@ -126,6 +126,8 @@ milestone's acceptance evidence has not been recorded here.
 - Added site-wide attribution for Sreenivas Makam and Ritesh Dhoot, plus a
   published Google feedback form linked from the introduction and footer. Form
   responses are stored outside learner state in a linked Google Sheet.
+- Linked both maintainer names in the site footer to their public LinkedIn
+  profiles.
 - Refreshed title, description, Open Graph metadata, and the 1200×630 social
   preview card for the new product identity.
 - Prepared the academy for publication in
