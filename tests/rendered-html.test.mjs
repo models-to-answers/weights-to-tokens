@@ -18,8 +18,8 @@ test("server-renders the academy introduction", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>How AI Models Become Answers<\/title>/i);
-  assert.match(html, /How AI Models Become Answers/i);
+  assert.match(html, /<title>How AI Models Produce Answers<\/title>/i);
+  assert.match(html, /How AI Models Produce Answers/i);
   assert.match(html, /From Weights to Tokens: An Interactive Journey/i);
   assert.match(html, /Who this is for/i);
   assert.match(html, /What you will understand/i);

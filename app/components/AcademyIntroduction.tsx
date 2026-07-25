@@ -44,7 +44,7 @@ export function AcademyIntroduction({
       <section className="introduction-hero">
         <div className="introduction-hero__copy">
           <p className="lesson-number">Interactive academy</p>
-          <h1>How AI Models Become Answers</h1>
+          <h1>How AI Models Produce Answers</h1>
           <p className="introduction-subtitle">
             From Weights to Tokens: An Interactive Journey Through Models,
             Inference, and GPUs

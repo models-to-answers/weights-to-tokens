@@ -253,8 +253,11 @@ the diagnostic model would overload the essential path.
 - **Status:** Approved
 - **Date:** 2026-07-24
 
-The product name is **How AI Models Become Answers**. “From Weights to Tokens”
-remains the technical subtitle and journey theme.
+The product name was **How AI Models Become Answers** at introduction launch.
+It was refined on 2026-07-25 to **How AI Models Produce Answers**, which keeps
+the approachable promise while accurately describing that a model generates an
+answer rather than becoming one. “From Weights to Tokens” remains the technical
+subtitle and journey theme.
 
 The root route is an unscored introduction rather than the first Model Factory
 chapter. It owns the site-level learning promise, intended audience, key
@@ -274,3 +277,19 @@ in a linked Google Sheet and may trigger owner notifications.
 Feedback is not stored in browser-local learner state or transmitted to an
 academy backend. The form warns respondents not to submit confidential or
 sensitive information and makes a reply email optional.
+
+### D-022 — Models to Answers is the umbrella identity
+
+- **Status:** Approved
+- **Date:** 2026-07-25
+
+The public domain identity is **Models to Answers**, with
+`ModelsToAnswers.tech` planned as the custom domain. The reader-facing academy
+title is **How AI Models Produce Answers**, and its subtitle remains **From
+Weights to Tokens: An Interactive Journey Through Models, Inference, and
+GPUs**.
+
+Source code lives in the `models-to-answers/weights-to-tokens` GitHub
+repository. The GitHub organization is the durable umbrella for this and
+potential future educational projects. Sreenivas Makam and Ritesh Dhoot are the
+project's co-maintainers.

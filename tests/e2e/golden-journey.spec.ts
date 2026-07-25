@@ -15,7 +15,7 @@ test("introduction explains the academy and opens each part without affecting pr
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "How AI Models Become Answers",
+      name: "How AI Models Produce Answers",
     }),
   ).toBeVisible();
   await expect(
@@ -408,7 +408,7 @@ test("reset progress is explicit and clears browser-local completion", async ({ 
   await page.getByRole("button", { name: "Yes, reset" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(
-    page.getByRole("heading", { name: "How AI Models Become Answers" }),
+    page.getByRole("heading", { name: "How AI Models Produce Answers" }),
   ).toBeVisible();
   await expect(page.getByLabel("0% complete")).toBeVisible();
 });

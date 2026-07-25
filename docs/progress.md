@@ -115,8 +115,9 @@ milestone's acceptance evidence has not been recorded here.
 - Reframed the roofline as an Expert-only comparison of the same useful work
   under naive and reuse-oriented data plans. Arithmetic intensity now changes
   because bytes moved change, rather than appearing to be an independent knob.
-- Renamed the learner-facing product to “How AI Models Become Answers,” while
-  retaining “From Weights to Tokens” as the technical subtitle.
+- Launched the introduction as “How AI Models Become Answers,” then refined the
+  learner-facing title to the more accurate “How AI Models Produce Answers,”
+  while retaining “From Weights to Tokens” as the technical subtitle.
 - Added an unscored introduction at `/` with the site-level learning promise,
   intended audience, six outcomes, Beginner/Expert guidance, and direct entry
   cards for Model Factory, Inference System, Inside the GPU, and the final
@@ -127,6 +128,11 @@ milestone's acceptance evidence has not been recorded here.
   responses are stored outside learner state in a linked Google Sheet.
 - Refreshed title, description, Open Graph metadata, and the 1200×630 social
   preview card for the new product identity.
+- Prepared the academy for publication in
+  `models-to-answers/weights-to-tokens`: preserved the repository's initial MIT
+  license history, named Sreenivas Makam and Ritesh Dhoot as co-maintainers,
+  and added README, contribution, security, third-party notice, CODEOWNERS,
+  pull-request template, and GitHub Actions CI files.
 - Enabled GitHub-flavored Markdown tables and removed learner-visible internal
   implementation labels.
 - Completed a Chrome playback audit of all 44 chapter animation projections
@@ -137,7 +143,7 @@ milestone's acceptance evidence has not been recorded here.
 
 ## Validation record
 
-Current validation on 2026-07-24:
+Current validation on 2026-07-25:
 
 | Command | Result |
 | --- | --- |

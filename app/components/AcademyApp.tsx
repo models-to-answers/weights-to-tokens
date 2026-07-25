@@ -294,12 +294,12 @@ export function AcademyApp(props: AcademyAppProps) {
             event.preventDefault();
             navigate("home");
           }}
-          aria-label="How AI Models Become Answers introduction"
+          aria-label="How AI Models Produce Answers introduction"
         >
           <span className="brand-mark" aria-hidden="true">M→A</span>
           <div>
             <p className="brand-kicker">From weights to tokens</p>
-            <p className="brand-name">How AI Models Become Answers</p>
+            <p className="brand-name">How AI Models Produce Answers</p>
           </div>
         </a>
 

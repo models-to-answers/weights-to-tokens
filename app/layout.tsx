@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "How AI Models Become Answers",
+  title: "How AI Models Produce Answers",
   description:
     "An interactive journey from model creation, through inference, into GPU execution and the generated answer.",
   icons: {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
   },
   openGraph: {
-    title: "How AI Models Become Answers",
+    title: "How AI Models Produce Answers",
     description:
       "From weights to tokens: understand models, inference systems, and GPU execution as one connected journey.",
     images: [
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
         url: "/social-card.png",
         width: 1200,
         height: 630,
-        alt: "How AI Models Become Answers: an interactive journey through models, inference, and GPUs",
+        alt: "How AI Models Produce Answers: an interactive journey through models, inference, and GPUs",
       },
     ],
   },
